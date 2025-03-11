@@ -32,8 +32,8 @@ class WelcomeFlow(StatesGroup):
 
 class AdvFlow(StatesGroup):
     adv_out_offer_state = State()
-    adv_in_offer_conditions_state = State()
-    adv_in_offer_input_state = State()
+    adv_in_offer_state = State()
+    adv_in_specialoffer_state = State()
 
 
 class ServicesFlow(StatesGroup):
@@ -55,14 +55,38 @@ class ReportIssueFlow(StatesGroup):
 MainMenuKeyboard = ReplyKeyboardMarkup(is_persistent=True,
                                        resize_keyboard=True,
                                        one_time_keyboard=True,
-                                        keyboard=[[KeyboardButton(text="📢Реклама"),
+                                       keyboard=[[KeyboardButton(text="📢Реклама"),
                                                  KeyboardButton(text="🙋‍♂️Задать вопрос")],
                                                  [KeyboardButton(text="🛎️Отели, статусы, лаунжи"),
                                                  KeyboardButton(text="🤖Сообщить о проблеме")],
                                                  [KeyboardButton(text="🌀Прочее")]])
 
-QuestionKeyboard = [[KeyboardButton(text="🙋Публичный вопрос"),
-                    KeyboardButton(text="🙈Частная консультация")]]
+QuestionKeyboard = ReplyKeyboardMarkup(is_persistent=True,
+                                       resize_keyboard=True,
+                                       one_time_keyboard=True,
+                                       keyboard=[[KeyboardButton(text="🙋Публичный вопрос"),
+                                                  KeyboardButton(text="🙈Частная консультация")]])
+
+AdvKeyboard = ReplyKeyboardMarkup(is_persistent=True,
+                                  resize_keyboard=True,
+                                  one_time_keyboard=True,
+                                  keyboard=[[KeyboardButton(text="📥Хотим разместиться у вас (узнать условия)")],
+                                            [KeyboardButton(text="⭐️Хотим предложить спецпроект")],
+                                            [KeyboardButton(text="📤Хотим предложить размещение в своём канале")]])
+
+ServiceKeyboard = ReplyKeyboardMarkup(is_persistent=True,
+                                       resize_keyboard=True,
+                                       one_time_keyboard=True,
+                                       keyboard=[[KeyboardButton(text="🛎️Забронировать отель по спецтарифу")],
+                                                 [KeyboardButton(text="✨️Приобрести статус")],
+                                                 [KeyboardButton(text="🍸Приобрести проходки в бизнес-залы")]])
+
+IssueKeyboard = ReplyKeyboardMarkup(is_persistent=True,
+                                       resize_keyboard=True,
+                                       one_time_keyboard=True,
+                                       keyboard=[[KeyboardButton(text="🤖Проблема с ботом Hilton Negotiated Fares")],
+                                                 [KeyboardButton(text="✈️Проблема с routes.de1337ed.ru")],
+                                                 [KeyboardButton(text="✍️Опечатка/неточность в тексте")]])
 
 
 @dp.message(CommandStart())
@@ -85,6 +109,35 @@ async def command_start_handler(message: Message, state: FSMContext) -> None:
         await message.answer(text="Произошла ошибка, попробуйте позже", parse_mode='html')
 
 
+@dp.message(AdvFlow.adv_in_offer_state)
+async def process_public_question(message: types.Message, state: FSMContext) -> None:
+    user_id = str(message.from_user.id)
+    user_name = message.from_user.full_name
+    forum_topic = await bot.create_forum_topic(chat_id=CHAT_ID,
+                                               name="📢Предложение рекламной интеграции от {user_name} [id={user_id}]"
+                                               .format(user_name=user_name,
+                                                       user_id=user_id))
+    await message.forward(chat_id=CHAT_ID,
+                          message_thread_id=forum_topic.message_thread_id)
+    await message.reply(text="✅Спасибо, предложение получено. Я скоро на него отвечу.",
+                        reply_markup=MainMenuKeyboard)
+    await state.clear()
+
+@dp.message(AdvFlow.adv_in_specialoffer_state)
+async def process_public_question(message: types.Message, state: FSMContext) -> None:
+    user_id = str(message.from_user.id)
+    user_name = message.from_user.full_name
+    forum_topic = await bot.create_forum_topic(chat_id=CHAT_ID,
+                                               name="⭐️Предложение спецпроекта от {user_name} [id={user_id}]"
+                                               .format(user_name=user_name,
+                                                       user_id=user_id))
+    await message.forward(chat_id=CHAT_ID,
+                          message_thread_id=forum_topic.message_thread_id)
+    await message.reply(text="✅Спасибо, предложение получено. Я скоро на него отвечу.",
+                        reply_markup=MainMenuKeyboard)
+    await state.clear()
+
+
 @dp.message(QuestionFlow.public_question)
 async def process_public_question(message: types.Message, state: FSMContext) -> None:
     user_id = str(message.from_user.id)
@@ -95,7 +148,63 @@ async def process_public_question(message: types.Message, state: FSMContext) -> 
                                                        user_id=user_id))
     await message.forward(chat_id=CHAT_ID,
                           message_thread_id=forum_topic.message_thread_id)
-    await message.reply("Готово, вопрос отправлен. Ответ придёт сюда же, в диалог с ботом")
+    await message.reply(text="Готово, вопрос отправлен. Ответ придёт сюда же, в диалог с ботом",
+                        reply_markup=MainMenuKeyboard)
+    await state.clear()
+
+
+
+@dp.message(WelcomeFlow.other_inquiries_state)
+async def process_public_question(message: types.Message, state: FSMContext) -> None:
+    user_id = str(message.from_user.id)
+    user_name = message.from_user.full_name
+    forum_topic = await bot.create_forum_topic(chat_id=CHAT_ID,
+                                               name="🌀Иное от {user_name} [id={user_id}]"
+                                               .format(user_name=user_name,
+                                                       user_id=user_id))
+    await message.forward(chat_id=CHAT_ID,
+                          message_thread_id=forum_topic.message_thread_id)
+    await message.reply(text="Готово, вопрос отправлен. Ответ придёт сюда же, в диалог с ботом",
+                        reply_markup=MainMenuKeyboard)
+    await state.clear()
+
+@dp.message(ReportIssueFlow.report_bot_problem)
+async def process_public_question(message: types.Message, state: FSMContext) -> None:
+    user_id = str(message.from_user.id)
+    user_name = message.from_user.full_name
+    forum_topic = await bot.create_forum_topic(chat_id=CHAT_ID,
+                                               name="🤖Проблема с ботом от {user_name} [id={user_id}]"
+                                               .format(user_name=user_name, user_id=user_id))
+    await message.forward(chat_id=CHAT_ID,
+                          message_thread_id=forum_topic.message_thread_id)
+    await message.reply(text="Готово, вопрос отправлен. Ответ придёт сюда же, в диалог с ботом",
+                        reply_markup=MainMenuKeyboard)
+    await state.clear()
+
+@dp.message(ReportIssueFlow.report_routes_problem)
+async def process_public_question(message: types.Message, state: FSMContext) -> None:
+    user_id = str(message.from_user.id)
+    user_name = message.from_user.full_name
+    forum_topic = await bot.create_forum_topic(chat_id=CHAT_ID,
+                                               name="✈️Проблема с routes.de1337ed.ru от {user_name} [id={user_id}]"
+                                               .format(user_name=user_name, user_id=user_id))
+    await message.forward(chat_id=CHAT_ID,
+                          message_thread_id=forum_topic.message_thread_id)
+    await message.reply(text="Готово, вопрос отправлен. Ответ придёт сюда же, в диалог с ботом",
+                        reply_markup=MainMenuKeyboard)
+    await state.clear()
+
+@dp.message(ReportIssueFlow.report_typo_problem)
+async def process_public_question(message: types.Message, state: FSMContext) -> None:
+    user_id = str(message.from_user.id)
+    user_name = message.from_user.full_name
+    forum_topic = await bot.create_forum_topic(chat_id=CHAT_ID,
+                                               name="✍️Опечатка/неточность от {user_name} [id={user_id}]"
+                                               .format(user_name=user_name, user_id=user_id))
+    await message.forward(chat_id=CHAT_ID,
+                          message_thread_id=forum_topic.message_thread_id)
+    await message.reply(text="Готово, вопрос отправлен. Ответ придёт сюда же, в диалог с ботом",
+                        reply_markup=MainMenuKeyboard)
     await state.clear()
 
 
@@ -104,21 +213,36 @@ async def input_handler(message: Message, state: FSMContext) -> None:
     try:
         if message.text == "📢Реклама":
             await state.set_state(WelcomeFlow.adv_state)
+            await message.reply(text="Какой тип рекламного сотрудничества вы хотите предложить?",
+                                parse_mode="html",
+                                reply_markup=AdvKeyboard)
         elif message.text == "🙋‍♂️Задать вопрос":
             await state.set_state(WelcomeFlow.questions_state)
             await message.reply(text="Выберите тип вопроса",
                                 parse_mode="html",
-                                reply_markup=ReplyKeyboardMarkup(
-                                    is_persistent=True,
-                                    resize_keyboard=True,
-                                    one_time_keyboard=True,
-                                    keyboard=QuestionKeyboard))
+                                reply_markup=QuestionKeyboard)
         elif message.text == "🛎️Отели, статусы, лаунжи":
-            await state.set_state(WelcomeFlow.services_state)
+            await message.reply(text="Выберите категорию",
+                                reply_markup=ServiceKeyboard,
+                                parse_mode="html")
         elif message.text == "🤖Сообщить о проблеме":
-            await state.set_state(WelcomeFlow.report_issue_state)
+            await message.reply(text="Выберите категорию",
+                                reply_markup=IssueKeyboard,
+                                parse_mode="html")
         elif message.text == "🌀Прочее":
             await state.set_state(WelcomeFlow.other_inquiries_state)
+            await message.reply(text="👇Введите ваше обращение ниже:")
+        elif message.text == "📥Хотим разместиться у вас (узнать условия)":
+            await state.set_state(AdvFlow.adv_in_offer_state)
+            await message.reply("Благодарю за интерес к моему каналу! Условия сейчас такие...Если условия вам подходят, оставьте ниже сообщение, в котором укажите:  ")
+        elif message.text == "⭐️Хотим предложить спецпроект":
+            await state.set_state(AdvFlow.adv_in_offer_state)
+            await message.reply("Благодарю за интерес к моему каналу! Спецпроекты - мой любимый формат. Пожалуйста, оставьте ниже сообщение с кратким брифом и я оочень скоро вернусь с предварительной оценкой")
+        elif message.text == "📤Хотим предложить размещение в своём канале":
+            await message.reply(text="Спасибо, но я не закупаю рекламу",
+                                reply_markup=MainMenuKeyboard,
+                                parse_mode="html")
+            await state.clear()
         elif message.text == "🙋Публичный вопрос":
             await message.reply("Введите вопрос ниже и отправьте боту 👇")
             await state.set_state(QuestionFlow.public_question)
@@ -126,7 +250,34 @@ async def input_handler(message: Message, state: FSMContext) -> None:
             await message.reply(text="<b>🙅Я сейчас не даю частные консультации в виду большой занятости.</b>\nЯ напишу в канале, когда это поменяется",
                                 reply_markup=MainMenuKeyboard,
                                 parse_mode="html")
-            await state.set_state(QuestionFlow.public_question)
+            await state.clear()
+        elif message.text == "🛎️Забронировать отель по спецтарифу":
+            await state.set_state(ServicesFlow.services_book_hotel_state)
+            await message.reply(
+                text="Скоро здесь можно будет забронировать отели по агентским тарифам",
+                reply_markup=MainMenuKeyboard,
+                parse_mode="html")
+        elif message.text == "✨️Приобрести статус":
+            await state.set_state(ServicesFlow.services_order_status_match_state)
+            await message.reply(
+                text="Здесь будут актуальный предложения по получению статусов отельных сетей, авиакомпаний и круизных компаний. Сейчас доступных предложений нет.",
+                reply_markup=MainMenuKeyboard,
+                parse_mode="html")
+        elif message.text == "🍸Приобрести проходки в бизнес-залы":
+            await state.set_state(ServicesFlow.services_order_lounge)
+            await message.reply(
+                text="Здесь будут продаваться мои лишние проходки в бизнес-залы. Сейчас доступных проходок нет",
+                reply_markup=MainMenuKeyboard,
+                parse_mode="html")
+        elif message.text == "🤖Проблема с ботом Hilton Negotiated Fares":
+            await state.set_state(ReportIssueFlow.report_bot_problem)
+            await message.reply(text="👇Опишите проблему:")
+        elif message.text == "✈️Проблема с routes.de1337ed.ru":
+            await state.set_state(ReportIssueFlow.report_bot_problem)
+            await message.reply(text="👇Опишите проблему:")
+        elif message.text == "✍️Опечатка/неточность в тексте":
+            await state.set_state(ReportIssueFlow.report_bot_problem)
+            await message.reply(text="👇Опишите проблему:")
         elif message.from_user.id != int(API_TOKEN.split(":")[0]):
             await message.answer("Сначала выберите тему обращения. Чтобы увидеть список тем, нажмите /start")
     except Exception as e:
