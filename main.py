@@ -7,11 +7,13 @@ import sys
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram import Bot, Dispatcher, types
-from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton
-from aiogram.fsm.state import State, StatesGroup
+from aiogram.types import Message
 from telethon import TelegramClient
 from telethon.tl import functions
-from telethon.tl.types import InputChannel
+from telethon.tl.types import InputChannel, PeerChat, PeerChannel
+from keyboards import MainMenuKeyboard, QuestionKeyboard, AdvKeyboard, ServiceKeyboard, IssueKeyboard
+from states import WelcomeFlow, AdvFlow, ServicesFlow, QuestionFlow, ReportIssueFlow
+
 from literals import *
 
 API_TOKEN = os.getenv("BOT_TOKEN")
@@ -28,78 +30,9 @@ dp = Dispatcher()
 bot = Bot(token=API_TOKEN)
 
 
-class WelcomeFlow(StatesGroup):
-    start_state = State()
-    adv_state = State()
-    services_state = State()
-    questions_state = State()
-    report_issue_state = State()
-    other_inquiries_state = State()
-
-
-class AdvFlow(StatesGroup):
-    adv_out_offer_state = State()
-    adv_in_offer_state = State()
-    adv_in_special_offer_state = State()
-
-
-class ServicesFlow(StatesGroup):
-    services_book_hotel_state = State()
-    services_order_status_match_state = State()
-    services_order_lounge = State()
-
-
-class QuestionFlow(StatesGroup):
-    public_question = State()
-    private_question = State()
-
-
-class ReportIssueFlow(StatesGroup):
-    report_bot_problem = State()
-    report_routes_problem = State()
-    report_typo_problem = State()
-
-
-MainMenuKeyboard = ReplyKeyboardMarkup(is_persistent=True,
-                                       resize_keyboard=True,
-                                       one_time_keyboard=True,
-                                       keyboard=[[KeyboardButton(text=ADV_BUTTON_TEXT),
-                                                 KeyboardButton(text=QUESTION_BUTTON_TEXT)],
-                                                 [KeyboardButton(text=SERVICES_BUTTON_TEXT),
-                                                 KeyboardButton(text=REPORT_BUTTON_TEXT)],
-                                                 [KeyboardButton(text=OTHER_BUTTON_TEXT)]])
-
-QuestionKeyboard = ReplyKeyboardMarkup(is_persistent=True,
-                                       resize_keyboard=True,
-                                       one_time_keyboard=True,
-                                       keyboard=[[KeyboardButton(text=PUBLIC_QUESTION_BUTTON_TEXT),
-                                                  KeyboardButton(text=PRIVATE_CONSULTATION_BUTTON_TEXT)]])
-
-AdvKeyboard = ReplyKeyboardMarkup(is_persistent=True,
-                                  resize_keyboard=True,
-                                  one_time_keyboard=True,
-                                  keyboard=[[KeyboardButton(text=ADV_OFFER_BUTTON_TEXT)],
-                                            [KeyboardButton(text=SPECIAL_OFFER_BUTTON_TEXT)],
-                                            [KeyboardButton(text=ADV_IN_CHANNEL_BUTTON_TEXT)]])
-
-ServiceKeyboard = ReplyKeyboardMarkup(is_persistent=True,
-                                       resize_keyboard=True,
-                                       one_time_keyboard=True,
-                                       keyboard=[[KeyboardButton(text=BOOK_HOTEL_BUTTON_TEXT)],
-                                                 [KeyboardButton(text=ORDER_STATUS_BUTTON_TEXT)],
-                                                 [KeyboardButton(text=ORDER_LOUNGE_BUTTON_TEXT)]])
-
-IssueKeyboard = ReplyKeyboardMarkup(is_persistent=True,
-                                    resize_keyboard=True,
-                                    one_time_keyboard=True,
-                                    keyboard=[[KeyboardButton(text=REPORT_BOT_PROBLEM_BUTTON_TEXT)],
-                                              [KeyboardButton(text=ROUTES_PROBLEM_BUTTON_TEXT)],
-                                              [KeyboardButton(text=TYPO_PROBLEM_BUTTON_TEXT)]])
-
-
 async def get_topic_title(topic_id: int):
     async with TelegramClient("session_name", API_ID, API_HASH) as client:
-        peer = await client.get_input_entity(CHAT_PEER_ID)
+        peer = await client.get_input_entity(PeerChannel(CHAT_PEER_ID))
         result = await client(functions.channels.GetForumTopicsByIDRequest(channel=InputChannel(channel_id=peer.channel_id,
                                                                                                 access_hash=peer.access_hash),
                                                                            topics=[topic_id]))
