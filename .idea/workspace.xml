@@ -4,7 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4de3df61-feff-4631-8e18-b3e5acfff5b1" name="Changes" comment="MVP with all answers provided">
+    <list default="true" id="4de3df61-feff-4631-8e18-b3e5acfff5b1" name="Changes" comment="MVP with answer to person functionality provided">
+      <change afterPath="$PROJECT_DIR$/literals.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
@@ -86,6 +87,9 @@
         <env name="PYTHONUNBUFFERED" value="1" />
         <env name="BOT_TOKEN" value="8100194356:AAGCOsfCLJ2wP_POuA1Srrk9pI7aNgJiJbw" />
         <env name="CHAT_ID" value="-1002346994241" />
+        <env name="API_ID" value="29435769" />
+        <env name="API_HASH" value="a2958a36e45fd2153074445de05d7e47" />
+        <env name="CHAT_PEER_ID" value="2346994241" />
       </envs>
       <option name="SDK_HOME" value="" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
@@ -152,7 +156,15 @@
       <option name="project" value="LOCAL" />
       <updated>1741715864552</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="MVP with answer to person functionality provided">
+      <option name="closed" value="true" />
+      <created>1741782720917</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1741782720917</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -170,6 +182,7 @@
     <MESSAGE value="MVP with one working topic" />
     <MESSAGE value="MVP with one working topic and minor fixes" />
     <MESSAGE value="MVP with all answers provided" />
-    <option name="LAST_COMMIT_MESSAGE" value="MVP with all answers provided" />
+    <MESSAGE value="MVP with answer to person functionality provided" />
+    <option name="LAST_COMMIT_MESSAGE" value="MVP with answer to person functionality provided" />
   </component>
 </project>
