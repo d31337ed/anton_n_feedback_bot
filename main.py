@@ -7,13 +7,20 @@ import sys
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram import Bot, Dispatcher, types
-from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import Message, ReplyKeyboardMarkup, InlineKeyboardMarkup, KeyboardButton, InlineKeyboardButton
 from aiogram.fsm.state import State, StatesGroup
+from telethon import TelegramClient
+from telethon.tl import functions
+from telethon.tl.types import InputChannel, PeerChat, PeerChannel, InputChannelFromMessage
 
 API_TOKEN = os.getenv("BOT_TOKEN")
+API_ID = int(os.getenv("API_ID"))
+API_HASH = os.getenv("API_HASH")
 CHAT_ID = os.getenv("CHAT_ID")
+CHAT_PEER_ID = 2346994241
 LOG_PATH = './logs/feedback_bot.log'
 ERROR_TOPIC_ID = 27
+BOT_ID = int(API_TOKEN.split(":")[0])
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -89,6 +96,15 @@ IssueKeyboard = ReplyKeyboardMarkup(is_persistent=True,
                                                  [KeyboardButton(text="✍️Опечатка/неточность в тексте")]])
 
 
+async def get_topic_title(topic_id: int):
+    async with TelegramClient("session_name", API_ID, API_HASH) as client:
+        peer = await client.get_input_entity(CHAT_PEER_ID)
+        result = await client(functions.channels.GetForumTopicsByIDRequest(channel=InputChannel(channel_id=peer.channel_id,
+                                                                                                access_hash=peer.access_hash),
+                                                                           topics=[topic_id]))
+        return result.topics[0].title
+
+
 @dp.message(CommandStart())
 async def command_start_handler(message: Message, state: FSMContext) -> None:
     try:
@@ -119,6 +135,14 @@ async def process_public_question(message: types.Message, state: FSMContext) -> 
                                                        user_id=user_id))
     await message.forward(chat_id=CHAT_ID,
                           message_thread_id=forum_topic.message_thread_id)
+    #   А может кнопочку с коллбеком сюда подсунуть?
+    await bot.send_message(chat_id=CHAT_ID,
+                           message_thread_id=forum_topic.message_thread_id,
+                           text="Не забудь нажать на кнопку, чтобы ответить",
+                           reply_markup=InlineKeyboardMarkup(
+                               inline_keyboard=[[InlineKeyboardButton(text="Ответить",
+                                                                      callback_data=user_id)]]))
+
     await message.reply(text="✅Спасибо, предложение получено. Я скоро на него отвечу.",
                         reply_markup=MainMenuKeyboard)
     await state.clear()
@@ -278,7 +302,12 @@ async def input_handler(message: Message, state: FSMContext) -> None:
         elif message.text == "✍️Опечатка/неточность в тексте":
             await state.set_state(ReportIssueFlow.report_bot_problem)
             await message.reply(text="👇Опишите проблему:")
-        elif message.from_user.id != int(API_TOKEN.split(":")[0]):
+        elif message.message_thread_id is not None and message.from_user.id != BOT_ID:
+            title = await get_topic_title(message.message_thread_id)
+            reply_to_chat_id = title.split("[id=")[-1][:-1]
+            await bot.send_message(chat_id=reply_to_chat_id,
+                                   text=message.text)
+        elif message.from_user.id != BOT_ID:
             await message.answer("Сначала выберите тему обращения. Чтобы увидеть список тем, нажмите /start")
     except Exception as e:
         error_text = 'Returned feedback error to user with ID=' + str(message.from_user.id) + '. Error: ' + e.__str__()
