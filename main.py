@@ -146,10 +146,8 @@ async def process_public_question(message: types.Message, state: FSMContext) -> 
     forum_topic = await bot.create_forum_topic(chat_id=CHAT_ID,
                                                name=IN_SPECIAL_TOPIC.format(user_name=user_name,
                                                                             user_id=user_id))
-    await message.forward(chat_id=CHAT_ID,
-                          message_thread_id=forum_topic.message_thread_id)
-    await message.reply(text=ADV_OFFER_RECEIVED_TEXT,
-                        reply_markup=MainMenuKeyboard)
+    await message.forward(chat_id=CHAT_ID, message_thread_id=forum_topic.message_thread_id)
+    await message.reply(text=ADV_OFFER_RECEIVED_TEXT, reply_markup=MainMenuKeyboard)
     await state.clear()
 
 
@@ -157,9 +155,8 @@ async def process_public_question(message: types.Message, state: FSMContext) -> 
 async def process_public_question(message: types.Message, state: FSMContext) -> None:
     user_id = str(message.from_user.id)
     user_name = message.from_user.full_name
-    forum_topic = await bot.create_forum_topic(chat_id=CHAT_ID,
-                                               name=PUBLIC_QUESTION_TOPIC.format(user_name=user_name,
-                                                                                 user_id=user_id))
+    forum_topic = await bot.create_forum_topic(chat_id=CHAT_ID, name=PUBLIC_QUESTION_TOPIC.format(user_name=user_name,
+                                                                                                  user_id=user_id))
     await message.forward(chat_id=CHAT_ID, message_thread_id=forum_topic.message_thread_id)
     await message.reply(text=INQUIRY_SENT_TEXT, reply_markup=MainMenuKeyboard)
     await state.clear()
