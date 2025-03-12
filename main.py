@@ -10,7 +10,7 @@ from aiogram import Bot, Dispatcher, types
 from aiogram.types import Message
 from telethon import TelegramClient
 from telethon.tl import functions
-from telethon.tl.types import InputChannel, PeerChat, PeerChannel
+from telethon.tl.types import InputChannel, PeerChannel
 from keyboards import MainMenuKeyboard, QuestionKeyboard, AdvKeyboard, ServiceKeyboard, IssueKeyboard
 from states import WelcomeFlow, AdvFlow, ServicesFlow, QuestionFlow, ReportIssueFlow
 
@@ -33,8 +33,9 @@ bot = Bot(token=API_TOKEN)
 async def get_topic_title(topic_id: int):
     async with TelegramClient("session_name", API_ID, API_HASH) as client:
         peer = await client.get_input_entity(PeerChannel(CHAT_PEER_ID))
-        result = await client(functions.channels.GetForumTopicsByIDRequest(channel=InputChannel(channel_id=peer.channel_id,
-                                                                                                access_hash=peer.access_hash),
+        chat_ref = InputChannel(channel_id=peer.channel_id,
+                                   access_hash=peer.access_hash)
+        result = await client(functions.channels.GetForumTopicsByIDRequest(channel=chat_ref,
                                                                            topics=[topic_id]))
         return result.topics[0].title
 
