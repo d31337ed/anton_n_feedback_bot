@@ -49,7 +49,7 @@ ERROR_TEXT = "Произошла ошибка, попробуйте позже"
 
 # Topic name templates
 IN_ADV_TOPIC = "📢Предложение рекламной интеграции от {user_name} [id={user_id}]"
-IN_SPECIAL_TOPIC = "⭐️Предложение спецпроекта от {user_name} [id={user_id}]"
+IN_SPECIAL_TOPIC = "⭐️️Предложение спецпроекта от {user_name} [id={user_id}]"
 PUBLIC_QUESTION_TOPIC = "🙋Публичный вопрос от {user_name} [id={user_id}]"
 ISSUE_BOT_TOPIC = "🤖Проблема с ботом от {user_name} [id={user_id}]"
 ISSUE_ROUTES_TOPIC  = "✈️Проблема с routes.de1337ed.ru от {user_name} [id={user_id}]"

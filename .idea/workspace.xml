@@ -4,9 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4de3df61-feff-4631-8e18-b3e5acfff5b1" name="Changes" comment="MVP with answer to person functionality provided">
-      <change afterPath="$PROJECT_DIR$/literals.py" afterDir="false" />
+    <list default="true" id="4de3df61-feff-4631-8e18-b3e5acfff5b1" name="Changes" comment="Minor tabulation refactoring">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/literals.py" beforeDir="false" afterPath="$PROJECT_DIR$/literals.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -164,7 +164,23 @@
       <option name="project" value="LOCAL" />
       <updated>1741782720917</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Isolated string literals from business logic">
+      <option name="closed" value="true" />
+      <created>1741792183867</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1741792183867</updated>
+    </task>
+    <task id="LOCAL-00006" summary="Minor tabulation refactoring">
+      <option name="closed" value="true" />
+      <created>1741792301835</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1741792301835</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -183,6 +199,8 @@
     <MESSAGE value="MVP with one working topic and minor fixes" />
     <MESSAGE value="MVP with all answers provided" />
     <MESSAGE value="MVP with answer to person functionality provided" />
-    <option name="LAST_COMMIT_MESSAGE" value="MVP with answer to person functionality provided" />
+    <MESSAGE value="Isolated string literals from business logic" />
+    <MESSAGE value="Minor tabulation refactoring" />
+    <option name="LAST_COMMIT_MESSAGE" value="Minor tabulation refactoring" />
   </component>
 </project>

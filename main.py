@@ -18,13 +18,12 @@ API_TOKEN = os.getenv("BOT_TOKEN")
 API_ID = int(os.getenv("API_ID"))
 API_HASH = os.getenv("API_HASH")
 CHAT_ID = os.getenv("CHAT_ID")
-CHAT_PEER_ID = os.getenv("CHAT_PEER_ID")
+CHAT_PEER_ID = int(os.getenv("CHAT_PEER_ID"))
 LOG_PATH = './logs/feedback_bot.log'
 ERROR_TOPIC_ID = 27
 BOT_ID = int(API_TOKEN.split(":")[0])
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+
 dp = Dispatcher()
 bot = Bot(token=API_TOKEN)
 
@@ -118,7 +117,7 @@ async def command_start_handler(message: Message, state: FSMContext) -> None:
                              parse_mode="html",
                              reply_markup=MainMenuKeyboard)
     except Exception as e:
-        error_text = 'Returned feedback error to user with ID=' + str(message.from_user.id) + '. Error: ' + e.__str__()
+        error_text = 'Returned feedback error to user with ID=' + str(message.from_user.id) + '. Error: ' + str(e)
         logging.error(error_text)
         await bot.send_message(text=error_text,
                                chat_id=CHAT_ID,
@@ -234,7 +233,7 @@ async def input_handler(message: Message, state: FSMContext) -> None:
             await state.set_state(AdvFlow.adv_in_offer_state)
             await message.reply(ADV_OFFER_STATE_TEXT)
         elif message.text == SPECIAL_OFFER_BUTTON_TEXT:
-            await state.set_state(AdvFlow.adv_in_offer_state)
+            await state.set_state(AdvFlow.adv_in_special_offer_state)
             await message.reply(SPECIAL_OFFER_STATE_TEXT)
         elif message.text == ADV_IN_CHANNEL_BUTTON_TEXT:
             await message.reply(text=ADV_IN_OFFER_TEXT,
@@ -284,7 +283,7 @@ async def input_handler(message: Message, state: FSMContext) -> None:
         elif message.from_user.id != BOT_ID:
             await message.answer(text=NO_INPUT)
     except Exception as e:
-        error_text = 'Returned feedback error to user with ID=' + str(message.from_user.id) + '. Error: ' + e.__str__()
+        error_text = 'Returned feedback error to user with ID=' + str(message.from_user.id) + '. Error: ' + str(e)
         logging.error(error_text)
         await bot.send_message(text=error_text,
                                chat_id=CHAT_ID,
