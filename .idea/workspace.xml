@@ -4,11 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4de3df61-feff-4631-8e18-b3e5acfff5b1" name="Changes" comment="Bug fixes after regress testing">
-      <change afterPath="$PROJECT_DIR$/command_handlers.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/state_handlers.py" afterDir="false" />
+    <list default="true" id="4de3df61-feff-4631-8e18-b3e5acfff5b1" name="Changes" comment="Refactoring: exported state and command handlers to separate modules">
+      <change afterPath="$PROJECT_DIR$/message_handler.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/get_topic_title.py" beforeDir="false" afterPath="$PROJECT_DIR$/get_topic_title.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/command_handlers.py" beforeDir="false" afterPath="$PROJECT_DIR$/command_handlers.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -247,7 +246,15 @@
       <option name="project" value="LOCAL" />
       <updated>1741886786809</updated>
     </task>
-    <option name="localTasksCounter" value="15" />
+    <task id="LOCAL-00015" summary="Refactoring: exported state and command handlers to separate modules">
+      <option name="closed" value="true" />
+      <created>1741894969754</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1741894969754</updated>
+    </task>
+    <option name="localTasksCounter" value="16" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -285,6 +292,7 @@
     <MESSAGE value="Added hotel flow handler" />
     <MESSAGE value="Implemented all logic before refactoring. Fixed bugs. Implemented closures. Improved UX." />
     <MESSAGE value="Bug fixes after regress testing" />
-    <option name="LAST_COMMIT_MESSAGE" value="Bug fixes after regress testing" />
+    <MESSAGE value="Refactoring: exported state and command handlers to separate modules" />
+    <option name="LAST_COMMIT_MESSAGE" value="Refactoring: exported state and command handlers to separate modules" />
   </component>
 </project>
