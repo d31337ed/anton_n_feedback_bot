@@ -97,7 +97,7 @@ async def process_hotel_request(message: types.Message, state: FSMContext) -> No
     if not data:
         forum_topic = await bot.create_forum_topic(chat_id=CHAT_ID,
                                                    name=HOTEL_REQUEST_TOPIC.format(user_name=user_name,
-                                                                               user_id=user_id))
+                                                                                   user_id=user_id))
         topic_id = forum_topic.message_thread_id
         await state.set_data(data={"topic_id": forum_topic.message_thread_id})
         await message.reply(text=HOTEL_REQUEST_RECEIVED_TEXT, parse_mode="html")
@@ -173,7 +173,6 @@ async def input_handler(message: Message, state: FSMContext) -> None:
             title = await get_topic_title(message.message_thread_id)
             reply_to_chat_id = title.split("[id=")[-1][:-1]
             await bot.copy_message(chat_id=reply_to_chat_id, from_chat_id=CHAT_ID, message_id=message.message_id)
-            await bot.send_message(chat_id=reply_to_chat_id, text=message.text)
         elif message.from_user.id != BOT_ID:
             await message.answer(text=NO_INPUT)
     except Exception as e:
@@ -182,11 +181,9 @@ async def input_handler(message: Message, state: FSMContext) -> None:
         await bot.send_message(text=error_text, chat_id=CHAT_ID, message_thread_id=ERROR_TOPIC_ID)
         await message.answer(text=ERROR_TEXT, parse_mode='html')
 
-
 async def main() -> None:
     logging.info('Yay starting bot')
     await dp.start_polling(bot)
-
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)
