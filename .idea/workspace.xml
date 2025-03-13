@@ -4,10 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4de3df61-feff-4631-8e18-b3e5acfff5b1" name="Changes" comment="Refactoring: exported state and command handlers to separate modules">
-      <change afterPath="$PROJECT_DIR$/message_handler.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/command_handlers.py" beforeDir="false" afterPath="$PROJECT_DIR$/command_handlers.py" afterDir="false" />
+    <list default="true" id="4de3df61-feff-4631-8e18-b3e5acfff5b1" name="Changes" comment="Fuck refactoring">
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -254,7 +251,15 @@
       <option name="project" value="LOCAL" />
       <updated>1741894969754</updated>
     </task>
-    <option name="localTasksCounter" value="16" />
+    <task id="LOCAL-00016" summary="Fuck refactoring">
+      <option name="closed" value="true" />
+      <created>1741902161109</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1741902161109</updated>
+    </task>
+    <option name="localTasksCounter" value="17" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -293,6 +298,7 @@
     <MESSAGE value="Implemented all logic before refactoring. Fixed bugs. Implemented closures. Improved UX." />
     <MESSAGE value="Bug fixes after regress testing" />
     <MESSAGE value="Refactoring: exported state and command handlers to separate modules" />
-    <option name="LAST_COMMIT_MESSAGE" value="Refactoring: exported state and command handlers to separate modules" />
+    <MESSAGE value="Fuck refactoring" />
+    <option name="LAST_COMMIT_MESSAGE" value="Fuck refactoring" />
   </component>
 </project>

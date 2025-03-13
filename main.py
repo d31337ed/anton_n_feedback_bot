@@ -1,14 +1,10 @@
 import ecs_logging
 import asyncio
 import sys
-
-import command_handlers
-import message_handler
-import state_handlers
-
 import logging
 import os
-
+import message_handler
+import state_handlers
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.base import StorageKey
 from aiogram.types import Message
@@ -25,6 +21,7 @@ BOT_ID = int(API_TOKEN.split(":")[0])
 
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher()
+
 dp.include_router(state_handlers.state_router)
 dp.include_router(message_handler.message_router)
 
@@ -35,40 +32,48 @@ async def command_start_handler(message: Message, state: FSMContext, bot: Bot) -
         await state.set_state(WelcomeFlow.start_state)
         user_id = str(message.from_user.id)
         user_name = message.from_user.first_name
-        logging.info('Received feedback /start from ' + user_id)
+        logging.info(f"Received feedback /start from user: {user_id}, Name: {user_name}")
         await message.answer(text=WELCOME_MESSAGE.format(user_name=user_name),
-                         parse_mode="html",
-                         reply_markup=MainMenuKeyboard)
+                             parse_mode="html",
+                             reply_markup=MainMenuKeyboard)
+        logging.info(f"Sent welcome message to user {user_id} with name {user_name}")
     except Exception as e:
-        error_text = 'Returned feedback error to user with ID=' + str(message.from_user.id) + '. Error: ' + str(e)
+        error_text = f"Returned feedback error to user with ID={str(message.from_user.id)}. Error: {str(e)}"
         logging.error(error_text)
         await bot.send_message(text=error_text,
                                chat_id=CHAT_ID,
                                message_thread_id=ERROR_TOPIC_ID)
+        logging.info(f"Error sent to admin for user {message.from_user.id}")
         await message.answer(text=ERROR_TEXT, parse_mode='html')
 
 
 @dp.message(Command("close"))
 async def handle_close(message: Message, state: FSMContext, bot: Bot):
     user_id = message.from_user.id
+    logging.info(f"Received /close command from user {user_id}")
     if message.message_thread_id is not None:
+        logging.info(f"Closing forum topic with ID: {message.message_thread_id}")
         await bot.close_forum_topic(chat_id=CHAT_ID,
                                     message_thread_id=message.message_thread_id)
         user_state = FSMContext(storage=dp.storage,
-                                key = StorageKey(chat_id=user_id, user_id=user_id, bot_id=BOT_ID))
+                                key=StorageKey(chat_id=user_id, user_id=user_id, bot_id=BOT_ID))
         await user_state.clear()
+        logging.info(f"Cleared FSM state for user {user_id}")
     else:
         user_data = await state.get_data()
         user_active_topic_id = user_data["topic_id"]
+        logging.info(f"Closing active forum topic with ID: {user_active_topic_id} for user {user_id}")
         await bot.close_forum_topic(chat_id=CHAT_ID,
                                     message_thread_id=user_active_topic_id)
         await state.clear()
+        logging.info(f"Cleared FSM state for user {user_id}")
         await bot.send_message(chat_id=user_id, reply_markup=MainMenuKeyboard,
                                text=INQUIRY_CLOSED, disable_notification=True)
+        logging.info(f"Sent inquiry closed message to user {user_id}")
 
 
 async def main() -> None:
-    logging.info('Yay starting bot')
+    logging.info('Starting bot')
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
