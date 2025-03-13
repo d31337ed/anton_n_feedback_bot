@@ -20,6 +20,7 @@ class ServicesFlow(StatesGroup):
     services_book_hotel_state = State()
     services_order_status_match_state = State()
     services_order_lounge = State()
+    services_hotel_input_state = State()
 
 
 class QuestionFlow(StatesGroup):

@@ -5,40 +5,19 @@ import asyncio
 import sys
 
 from aiogram.filters import CommandStart
-from aiogram.fsm.context import FSMContext
 from aiogram import Bot, Dispatcher, types
-from aiogram.types import Message
-from telethon import TelegramClient
-from telethon.tl import functions
-from telethon.tl.types import InputChannel, PeerChannel
-from keyboards import MainMenuKeyboard, QuestionKeyboard, AdvKeyboard, ServiceKeyboard, IssueKeyboard
-from states import WelcomeFlow, AdvFlow, ServicesFlow, QuestionFlow, ReportIssueFlow
-
+from get_topic_title import get_topic_title
+from button_handlers import *
 from literals import *
 
 API_TOKEN = os.getenv("BOT_TOKEN")
-API_ID = int(os.getenv("API_ID"))
-API_HASH = os.getenv("API_HASH")
 CHAT_ID = os.getenv("CHAT_ID")
-CHAT_PEER_ID = int(os.getenv("CHAT_PEER_ID"))
 LOG_PATH = './logs/feedback_bot.log'
 ERROR_TOPIC_ID = 27
 BOT_ID = int(API_TOKEN.split(":")[0])
 
-
 dp = Dispatcher()
 bot = Bot(token=API_TOKEN)
-
-
-async def get_topic_title(topic_id: int):
-    async with TelegramClient("session_name", API_ID, API_HASH) as client:
-        peer = await client.get_input_entity(PeerChannel(CHAT_PEER_ID))
-        chat_ref = InputChannel(channel_id=peer.channel_id,
-                                   access_hash=peer.access_hash)
-        result = await client(functions.channels.GetForumTopicsByIDRequest(channel=chat_ref,
-                                                                           topics=[topic_id]))
-        return result.topics[0].title
-
 
 @dp.message(CommandStart())
 async def command_start_handler(message: Message, state: FSMContext) -> None:
@@ -66,6 +45,19 @@ async def process_public_question(message: types.Message, state: FSMContext) -> 
     forum_topic = await bot.create_forum_topic(chat_id=CHAT_ID,
                                                name=IN_ADV_TOPIC.format(user_name=user_name,
                                                                         user_id=user_id))
+    await message.forward(chat_id=CHAT_ID,
+                          message_thread_id=forum_topic.message_thread_id)
+    await message.reply(text=ADV_OFFER_RECEIVED_TEXT,
+                        reply_markup=MainMenuKeyboard)
+    await state.clear()
+
+@dp.message(ServicesFlow.services_hotel_input_state)
+async def process_hotel_request(message: types.Message, state: FSMContext) -> None:
+    user_id = str(message.from_user.id)
+    user_name = message.from_user.full_name
+    forum_topic = await bot.create_forum_topic(chat_id=CHAT_ID,
+                                               name=HOTEL_REQUEST_TOPIC.format(user_name=user_name,
+                                                                               user_id=user_id))
     await message.forward(chat_id=CHAT_ID,
                           message_thread_id=forum_topic.message_thread_id)
     await message.reply(text=ADV_OFFER_RECEIVED_TEXT,
@@ -138,92 +130,23 @@ async def process_public_question(message: types.Message, state: FSMContext) -> 
     await message.reply(text=INQUIRY_SENT_TEXT, reply_markup=MainMenuKeyboard)
     await state.clear()
 
-
 @dp.message()
 async def input_handler(message: Message, state: FSMContext) -> None:
     try:
-        if message.text == ADV_BUTTON_TEXT:
-            await state.set_state(WelcomeFlow.adv_state)
-            await message.reply(text=ADV_STATE_TEXT,
-                                parse_mode="html",
-                                reply_markup=AdvKeyboard)
-        elif message.text == QUESTION_BUTTON_TEXT:
-            await state.set_state(WelcomeFlow.questions_state)
-            await message.reply(text=QUESTION_STATE_TEXT,
-                                parse_mode="html",
-                                reply_markup=QuestionKeyboard)
-        elif message.text == SERVICES_BUTTON_TEXT:
-            await message.reply(text=SERVICE_STATE_TEXT,
-                                reply_markup=ServiceKeyboard,
-                                parse_mode="html")
-        elif message.text == REPORT_BUTTON_TEXT:
-            await message.reply(text=SERVICE_STATE_TEXT,
-                                reply_markup=IssueKeyboard,
-                                parse_mode="html")
-        elif message.text == OTHER_BUTTON_TEXT:
-            await state.set_state(WelcomeFlow.other_inquiries_state)
-            await message.reply(text=OTHER_INQUIRIES_STATE_TEXT)
-        elif message.text == ADV_OFFER_BUTTON_TEXT:
-            await state.set_state(AdvFlow.adv_in_offer_state)
-            await message.reply(ADV_OFFER_STATE_TEXT)
-        elif message.text == SPECIAL_OFFER_BUTTON_TEXT:
-            await state.set_state(AdvFlow.adv_in_special_offer_state)
-            await message.reply(SPECIAL_OFFER_STATE_TEXT)
-        elif message.text == ADV_IN_CHANNEL_BUTTON_TEXT:
-            await message.reply(text=ADV_IN_OFFER_TEXT,
-                                reply_markup=MainMenuKeyboard,
-                                parse_mode="html")
-            await state.clear()
-        elif message.text == PUBLIC_QUESTION_BUTTON_TEXT:
-            await message.reply(PUBLIC_QUESTION_TEXT)
-            await state.set_state(QuestionFlow.public_question)
-        elif message.text == PRIVATE_CONSULTATION_BUTTON_TEXT:
-            await message.reply(text=PRIVATE_CONSULTATION_TEXT,
-                                reply_markup=MainMenuKeyboard,
-                                parse_mode="html")
-            await state.clear()
-        elif message.text == BOOK_HOTEL_BUTTON_TEXT:
-            await state.set_state(ServicesFlow.services_book_hotel_state)
-            await message.reply(
-                text=BOOK_HOTEL_TEXT,
-                reply_markup=MainMenuKeyboard,
-                parse_mode="html")
-        elif message.text == ORDER_STATUS_BUTTON_TEXT:
-            await state.set_state(ServicesFlow.services_order_status_match_state)
-            await message.reply(
-                text=ORDER_STATUS_TEXT,
-                reply_markup=MainMenuKeyboard,
-                parse_mode="html")
-        elif message.text == ORDER_LOUNGE_BUTTON_TEXT:
-            await state.set_state(ServicesFlow.services_order_lounge)
-            await message.reply(
-                text=ORDER_LOUNGE_TEXT,
-                reply_markup=MainMenuKeyboard,
-                parse_mode="html")
-        elif message.text == REPORT_BOT_PROBLEM_BUTTON_TEXT:
-            await state.set_state(ReportIssueFlow.report_bot_problem)
-            await message.reply(text=PROBLEM_TEXT)
-        elif message.text == ROUTES_PROBLEM_BUTTON_TEXT:
-            await state.set_state(ReportIssueFlow.report_bot_problem)
-            await message.reply(text=PROBLEM_TEXT)
-        elif message.text == TYPO_PROBLEM_BUTTON_TEXT:
-            await state.set_state(ReportIssueFlow.report_bot_problem)
-            await message.reply(text=PROBLEM_TEXT)
+        handler = handlers.get(message.text)
+        if handler:
+            await handler(message, state)
         elif message.message_thread_id is not None and message.from_user.id != BOT_ID:
             title = await get_topic_title(message.message_thread_id)
             reply_to_chat_id = title.split("[id=")[-1][:-1]
-            await bot.send_message(chat_id=reply_to_chat_id,
-                                   text=message.text)
+            await bot.send_message(chat_id=reply_to_chat_id, text=message.text)
         elif message.from_user.id != BOT_ID:
             await message.answer(text=NO_INPUT)
     except Exception as e:
-        error_text = 'Returned feedback error to user with ID=' + str(message.from_user.id) + '. Error: ' + str(e)
+        error_text = f'Returned feedback error to user with ID={message.from_user.id}. Error: {e}'
         logging.error(error_text)
-        await bot.send_message(text=error_text,
-                               chat_id=CHAT_ID,
-                               message_thread_id=ERROR_TOPIC_ID)
+        await bot.send_message(text=error_text, chat_id=CHAT_ID, message_thread_id=ERROR_TOPIC_ID)
         await message.answer(text=ERROR_TEXT, parse_mode='html')
-
 
 
 async def main() -> None:
