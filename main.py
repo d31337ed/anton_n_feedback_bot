@@ -54,7 +54,8 @@ async def handle_close(message: Message, state: FSMContext):
         await bot.close_forum_topic(chat_id=CHAT_ID,
                                     message_thread_id=user_active_topic_id)
         await state.clear()
-        await bot.send_message(chat_id=user_id, reply_markup=MainMenuKeyboard)
+        await bot.send_message(chat_id=user_id, reply_markup=MainMenuKeyboard,
+                               text=INQUIRY_CLOSED, disable_notification=True)
 
 @dp.message(AdvFlow.adv_in_offer_state)
 async def process_public_question(message: types.Message, state: FSMContext) -> None:
@@ -67,7 +68,7 @@ async def process_public_question(message: types.Message, state: FSMContext) -> 
                                                                             user_id=user_id))
         topic_id = forum_topic.message_thread_id
         await state.set_data(data={"topic_id": forum_topic.message_thread_id})
-        await message.reply(text=ADV_OFFER_RECEIVED_TEXT)
+        await message.reply(text=ADV_OFFER_RECEIVED_TEXT, parse_mode="html")
     else:
         topic_id = data["topic_id"]
     await message.forward(chat_id=CHAT_ID, message_thread_id=topic_id)
@@ -83,7 +84,7 @@ async def process_public_question(message: types.Message, state: FSMContext) -> 
                                                                             user_id=user_id))
         topic_id = forum_topic.message_thread_id
         await state.set_data(data={"topic_id": forum_topic.message_thread_id})
-        await message.reply(text=ADV_OFFER_RECEIVED_TEXT)
+        await message.reply(text=ADV_OFFER_RECEIVED_TEXT, parse_mode="html")
     else:
         topic_id = data["topic_id"]
     await message.forward(chat_id=CHAT_ID, message_thread_id=topic_id)
@@ -99,7 +100,7 @@ async def process_hotel_request(message: types.Message, state: FSMContext) -> No
                                                                                user_id=user_id))
         topic_id = forum_topic.message_thread_id
         await state.set_data(data={"topic_id": forum_topic.message_thread_id})
-        await message.reply(text=HOTEL_REQUEST_RECEIVED_TEXT)
+        await message.reply(text=HOTEL_REQUEST_RECEIVED_TEXT, parse_mode="html")
     else:
         topic_id = data["topic_id"]
     await message.forward(chat_id=CHAT_ID, message_thread_id=topic_id)
@@ -111,7 +112,7 @@ async def process_public_question(message: types.Message, state: FSMContext) -> 
     forum_topic = await bot.create_forum_topic(chat_id=CHAT_ID, name=PUBLIC_QUESTION_TOPIC.format(user_name=user_name,
                                                                                                   user_id=user_id))
     await message.forward(chat_id=CHAT_ID, message_thread_id=forum_topic.message_thread_id)
-    await message.reply(text=INQUIRY_SENT_TEXT, reply_markup=MainMenuKeyboard)
+    await message.reply(text=INQUIRY_SENT_TEXT, reply_markup=MainMenuKeyboard, parse_mode="html")
     await state.clear()
 
 @dp.message(WelcomeFlow.other_inquiries_state)
@@ -123,7 +124,8 @@ async def process_public_question(message: types.Message, state: FSMContext) -> 
         forum_topic = await bot.create_forum_topic(chat_id=CHAT_ID,
                                                    name=OTHERS_TOPIC.format(user_name=user_name,
                                                                             user_id=user_id))
-        await state.set_data(data={"topic_id": forum_topic.message_thread_id})
+        topic_id = forum_topic.message_thread_id
+        await state.set_data(data={"topic_id": topic_id})
         await message.reply(text=INQUIRY_SENT_TEXT)
     else:
         topic_id = data["topic_id"]
@@ -170,6 +172,7 @@ async def input_handler(message: Message, state: FSMContext) -> None:
         elif message.message_thread_id is not None and message.from_user.id != BOT_ID:
             title = await get_topic_title(message.message_thread_id)
             reply_to_chat_id = title.split("[id=")[-1][:-1]
+            await bot.copy_message(chat_id=reply_to_chat_id, from_chat_id=CHAT_ID, message_id=message.message_id)
             await bot.send_message(chat_id=reply_to_chat_id, text=message.text)
         elif message.from_user.id != BOT_ID:
             await message.answer(text=NO_INPUT)
