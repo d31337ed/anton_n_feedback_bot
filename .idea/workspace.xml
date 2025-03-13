@@ -4,13 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4de3df61-feff-4631-8e18-b3e5acfff5b1" name="Changes" comment="Minor refactorings">
-      <change afterPath="$PROJECT_DIR$/get_topic_title.py" afterDir="false" />
+    <list default="true" id="4de3df61-feff-4631-8e18-b3e5acfff5b1" name="Changes" comment="Added hotel flow handler">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/handle_new_message.py" beforeDir="false" afterPath="$PROJECT_DIR$/button_handlers.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/literals.py" beforeDir="false" afterPath="$PROJECT_DIR$/literals.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/states.py" beforeDir="false" afterPath="$PROJECT_DIR$/states.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -215,7 +211,15 @@
       <option name="project" value="LOCAL" />
       <updated>1741794861894</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="Added hotel flow handler">
+      <option name="closed" value="true" />
+      <created>1741854620828</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1741854620828</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -240,6 +244,7 @@
     <MESSAGE value="Refactoring: isolated Keyboards and States from business logic, fixed issues" />
     <MESSAGE value="Tabulation refactorings" />
     <MESSAGE value="Minor refactorings" />
-    <option name="LAST_COMMIT_MESSAGE" value="Minor refactorings" />
+    <MESSAGE value="Added hotel flow handler" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added hotel flow handler" />
   </component>
 </project>
