@@ -11,7 +11,7 @@ async def get_topic_title(topic_id: int):
     async with TelegramClient("session_name", API_ID, API_HASH) as client:
         peer = await client.get_input_entity(PeerChannel(CHAT_PEER_ID))
         chat_ref = InputChannel(channel_id=peer.channel_id,
-                                   access_hash=peer.access_hash)
+                                access_hash=peer.access_hash)
         result = await client(functions.channels.GetForumTopicsByIDRequest(channel=chat_ref,
                                                                            topics=[topic_id]))
         return result.topics[0].title
