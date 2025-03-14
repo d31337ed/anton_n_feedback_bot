@@ -5,22 +5,44 @@ from states import WelcomeFlow, AdvFlow, ServicesFlow, QuestionFlow, ReportIssue
 from literals import *
 
 async def handle_adv_button(message: Message, state: FSMContext):
-    await state.set_state(WelcomeFlow.adv_state)
-    await message.reply(text=ADV_STATE_TEXT, parse_mode="html", reply_markup=AdvKeyboard)
+    data = await state.get_data()
+    if not data:
+        await state.set_state(WelcomeFlow.adv_state)
+        await message.reply(text=ADV_STATE_TEXT, parse_mode="html", reply_markup=AdvKeyboard)
+    else:
+        await message.reply(text=DUPLICATED_ERROR, parse_mode="html")
 
 async def handle_question_button(message: Message, state: FSMContext):
-    await state.set_state(WelcomeFlow.questions_state)
-    await message.reply(text=QUESTION_STATE_TEXT, parse_mode="html", reply_markup=QuestionKeyboard)
+    data = await state.get_data()
+    if not data:
+        await state.set_state(WelcomeFlow.questions_state)
+        await message.reply(text=QUESTION_STATE_TEXT, parse_mode="html", reply_markup=QuestionKeyboard)
+    else:
+        await message.reply(text=DUPLICATED_ERROR, parse_mode="html")
 
 async def handle_services_button(message: Message, state: FSMContext):
-    await message.reply(text=SERVICE_STATE_TEXT, reply_markup=ServiceKeyboard, parse_mode="html")
+    data = await state.get_data()
+    if not data:
+        await state.set_state(WelcomeFlow.services_state)
+        await message.reply(text=SERVICE_STATE_TEXT, reply_markup=ServiceKeyboard, parse_mode="html")
+    else:
+        await message.reply(text=DUPLICATED_ERROR, parse_mode="html")
 
 async def handle_report_button(message: Message, state: FSMContext):
-    await message.reply(text=SERVICE_STATE_TEXT, reply_markup=IssueKeyboard, parse_mode="html")
+    data = await state.get_data()
+    if not data:
+        await state.set_state(WelcomeFlow.report_issue_state)
+        await message.reply(text=SERVICE_STATE_TEXT, reply_markup=IssueKeyboard, parse_mode="html")
+    else:
+        await message.reply(text=DUPLICATED_ERROR, parse_mode="html")
 
 async def handle_other_button(message: Message, state: FSMContext):
-    await state.set_state(WelcomeFlow.other_inquiries_state)
-    await message.reply(text=OTHER_INQUIRIES_STATE_TEXT)
+    data = await state.get_data()
+    if not data:
+        await state.set_state(WelcomeFlow.other_inquiries_state)
+        await message.reply(text=OTHER_INQUIRIES_STATE_TEXT)
+    else:
+        await message.reply(text=DUPLICATED_ERROR, parse_mode="html")
 
 async def handle_adv_offer_button(message: Message, state: FSMContext):
     await state.set_state(AdvFlow.adv_in_offer_state)
@@ -44,7 +66,7 @@ async def handle_private_consultation_button(message: Message, state: FSMContext
 
 async def handle_book_hotel_button(message: Message, state: FSMContext):
     await state.set_state(ServicesFlow.services_book_hotel_state)
-    await message.reply(text=BOOK_HOTEL_TEXT, reply_markup=MainMenuKeyboard, parse_mode="html")
+    await message.reply(text=BOOK_HOTEL_TEXT, parse_mode="html")
 
 async def handle_order_status_button(message: Message, state: FSMContext):
     await state.set_state(ServicesFlow.services_order_status_match_state)
