@@ -30,6 +30,11 @@ ServiceKeyboard = ReplyKeyboardMarkup(is_persistent=True,
                                                  [KeyboardButton(text=ORDER_STATUS_BUTTON_TEXT)],
                                                  [KeyboardButton(text=ORDER_LOUNGE_BUTTON_TEXT)]])
 
+AvailableStatusesKeyboard = ReplyKeyboardMarkup(is_persistent=True,
+                                                resize_keyboard=True,
+                                                one_time_keyboard=True,
+                                                keyboard=[[KeyboardButton(text=STATUS_AVOLTA_RADISSON)]])
+
 IssueKeyboard = ReplyKeyboardMarkup(is_persistent=True,
                                     resize_keyboard=True,
                                     one_time_keyboard=True,

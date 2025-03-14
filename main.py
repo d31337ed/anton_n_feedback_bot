@@ -75,7 +75,7 @@ async def handle_close(message: Message, state: FSMContext):
             await state.clear()
             logging.info(f"Cleared FSM state for user {user_id}")
             await bot.send_message(chat_id=user_id, reply_markup=MainMenuKeyboard,
-                                   text=INQUIRY_CLOSED, disable_notification=True)
+                                   text=INQUIRY_CLOSED, parse_mode="html", disable_notification=True)
             logging.info(f"Sent inquiry closed message to user {user_id}")
         except KeyError as ke:
             await message.reply(text=NO_TOPIC_TO_CLOSE, parse_mode="html", reply_markup=MainMenuKeyboard)

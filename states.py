@@ -19,6 +19,7 @@ class AdvFlow(StatesGroup):
 class ServicesFlow(StatesGroup):
     services_book_hotel_state = State()
     services_order_status_match_state = State()
+    services_order_status_avolta_radisson = State()
     services_order_lounge = State()
 
 

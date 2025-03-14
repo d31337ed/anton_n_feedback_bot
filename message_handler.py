@@ -27,7 +27,7 @@ async def input_handler(message: Message, state: FSMContext, bot: Bot) -> None:
             reply_to_chat_id = title.split("[id=")[-1][:-1]
             await bot.copy_message(chat_id=reply_to_chat_id, from_chat_id=CHAT_ID, message_id=message.message_id)
         elif message.from_user.id != BOT_ID:
-            await message.answer(text=NO_INPUT)
+            await message.answer(text=NO_INPUT, parse_mode="html")
     except Exception as e:
         error_text = f'Returned feedback error to user with ID={message.from_user.id}. Error: {e}'
         logging.error(error_text)
