@@ -1,6 +1,5 @@
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
-from telebot.types import LinkPreviewOptions
 
 from keyboards import MainMenuKeyboard, QuestionKeyboard, AdvKeyboard, ServiceKeyboard, IssueKeyboard, \
     AvailableStatusesKeyboard

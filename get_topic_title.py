@@ -1,12 +1,12 @@
 import logging
-import os
+from os import getenv
 from telethon import TelegramClient
 from telethon.tl import functions
 from telethon.tl.types import PeerChannel, InputChannel
 
-API_ID = int(os.getenv("API_ID"))
-API_HASH = os.getenv("API_HASH")
-CHAT_PEER_ID = int(os.getenv("CHAT_PEER_ID"))
+API_ID = int(getenv("API_ID"))
+API_HASH = getenv("API_HASH")
+CHAT_PEER_ID = int(getenv("CHAT_PEER_ID"))
 
 async def get_topic_title(topic_id: int):
     logging.info(f"Attempting to retrieve topic title for topic ID: {topic_id}")

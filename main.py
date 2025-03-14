@@ -2,10 +2,13 @@ import ecs_logging
 import asyncio
 import sys
 import logging
-import os
+
 import message_handler
 import state_handlers
-from aiogram import Bot, Dispatcher
+from os import getenv
+from redis.asyncio import Redis as AioRedis
+from aiogram import Bot, Dispatcher, Router
+from aiogram.fsm.storage.redis import RedisStorage
 from aiogram.fsm.storage.base import StorageKey
 from aiogram.types import Message
 from aiogram.filters import CommandStart, Command
@@ -14,24 +17,33 @@ from states import *
 from keyboards import *
 from literals import *
 
-API_TOKEN = os.getenv("BOT_TOKEN")
-CHAT_ID = os.getenv("CHAT_ID")
+API_TOKEN = getenv("BOT_TOKEN")
+CHAT_ID = getenv("CHAT_ID")
 LOG_PATH = './logs/feedback_bot.log'
-ERROR_TOPIC_ID = int(os.getenv("ERROR_TOPIC_ID"))
+ERROR_TOPIC_ID = int(getenv("ERROR_TOPIC_ID"))
 BOT_ID = int(API_TOKEN.split(":")[0])
+REDIS_HOST = getenv('REDIS_HOST')
+REDIS_PORT = int(getenv('REDIS_PORT'))
+REDIS_DB = int(getenv('REDIS_DB'))
 
-bot = Bot(token=API_TOKEN)
+storage = None
+router = Router()
 dp = Dispatcher()
+bot = Bot(token=API_TOKEN)
+
 
 async def main() -> None:
+    global storage, dp
+    redis = AioRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB)
+    storage = RedisStorage(redis)
+    dp = Dispatcher(storage=storage)
+    dp.include_router(router)
+    dp.include_router(state_handlers.state_router)
+    dp.include_router(message_handler.message_router)
     logging.info('Starting bot')
     await dp.start_polling(bot)
 
-dp.include_router(state_handlers.state_router)
-dp.include_router(message_handler.message_router)
-
-
-@dp.message(CommandStart())
+@router.message(CommandStart())
 async def command_start_handler(message: Message, state: FSMContext) -> None:
     try:
         user_id = str(message.from_user.id)
@@ -51,8 +63,7 @@ async def command_start_handler(message: Message, state: FSMContext) -> None:
         logging.info(f"Error sent to admin for user {message.from_user.id}")
         await message.answer(text=ERROR_TEXT, parse_mode='html')
 
-
-@dp.message(Command("close"))
+@router.message(Command("close"))
 async def handle_close(message: Message, state: FSMContext):
     user_id = message.from_user.id
     logging.info(f"Received /close command from user {user_id}")
@@ -77,7 +88,7 @@ async def handle_close(message: Message, state: FSMContext):
             await bot.send_message(chat_id=user_id, reply_markup=MainMenuKeyboard,
                                    text=INQUIRY_CLOSED, parse_mode="html", disable_notification=True)
             logging.info(f"Sent inquiry closed message to user {user_id}")
-        except KeyError as ke:
+        except KeyError:
             await message.reply(text=NO_TOPIC_TO_CLOSE, parse_mode="html", reply_markup=MainMenuKeyboard)
 
 if __name__ == "__main__":

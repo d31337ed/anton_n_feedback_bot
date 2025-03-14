@@ -1,5 +1,5 @@
 import logging
-import os
+from os import getenv
 from aiogram import Router, Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
@@ -7,10 +7,10 @@ from aiogram.types import Message
 from states import *
 from keyboards import *
 
-API_TOKEN = os.getenv("BOT_TOKEN")
-CHAT_ID = os.getenv("CHAT_ID")
+API_TOKEN = getenv("BOT_TOKEN")
+CHAT_ID = getenv("CHAT_ID")
 LOG_PATH = './logs/feedback_bot.log'
-ERROR_TOPIC_ID = int(os.getenv("ERROR_TOPIC_ID"))
+ERROR_TOPIC_ID = int(getenv("ERROR_TOPIC_ID"))
 BOT_ID = int(API_TOKEN.split(":")[0])
 
 state_router = Router()
