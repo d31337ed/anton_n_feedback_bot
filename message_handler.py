@@ -3,9 +3,12 @@ from os import getenv
 from aiogram import Router, Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
+from dotenv import load_dotenv
+
 from button_handlers import handlers
 from get_topic_title import get_topic_title
 from keyboards import *
+load_dotenv()
 
 API_TOKEN = getenv("BOT_TOKEN")
 CHAT_ID = getenv("CHAT_ID")

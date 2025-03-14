@@ -2,7 +2,6 @@ import ecs_logging
 import asyncio
 import sys
 import logging
-
 import message_handler
 import state_handlers
 from os import getenv
@@ -16,7 +15,9 @@ from aiogram.fsm.context import FSMContext
 from states import *
 from keyboards import *
 from literals import *
+from dotenv import load_dotenv
 
+load_dotenv()
 API_TOKEN = getenv("BOT_TOKEN")
 CHAT_ID = getenv("CHAT_ID")
 LOG_PATH = './logs/feedback_bot.log'

@@ -1,8 +1,12 @@
 import logging
 from os import getenv
+
+from dotenv import load_dotenv
 from telethon import TelegramClient
 from telethon.tl import functions
 from telethon.tl.types import PeerChannel, InputChannel
+
+load_dotenv()
 
 API_ID = int(getenv("API_ID"))
 API_HASH = getenv("API_HASH")
