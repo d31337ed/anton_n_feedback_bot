@@ -68,7 +68,8 @@ async def handle_private_consultation_button(message: Message, state: FSMContext
 
 async def handle_book_hotel_button(message: Message, state: FSMContext):
     await state.set_state(ServicesFlow.services_book_hotel_state)
-    await message.reply(text=BOOK_HOTEL_TEXT, parse_mode="html")
+    await message.reply(text=BOOK_HOTEL_TEXT, parse_mode="html",
+                        link_preview_options={"is_disabled": True})
 
 async def handle_order_status_button(message: Message, state: FSMContext):
     await state.set_state(ServicesFlow.services_order_status_match_state)
@@ -77,6 +78,10 @@ async def handle_order_status_button(message: Message, state: FSMContext):
 
 async def handle_status_avolta_radisson(message: Message, state: FSMContext):
     await state.set_state(ServicesFlow.services_order_status_avolta_radisson)
+    await message.reply(text=ORDER_STATUS_CERTAIN_TEXT, parse_mode="html")
+
+async def handle_status_msc_diamond(message: Message, state: FSMContext):
+    await state.set_state(ServicesFlow.services_order_status_msc_diamond)
     await message.reply(text=ORDER_STATUS_CERTAIN_TEXT, parse_mode="html")
 
 async def handle_order_lounge_button(message: Message, state: FSMContext):
@@ -110,6 +115,7 @@ handlers = {
     BOOK_HOTEL_BUTTON_TEXT: handle_book_hotel_button,
     ORDER_STATUS_BUTTON_TEXT: handle_order_status_button,
     STATUS_AVOLTA_RADISSON: handle_status_avolta_radisson,
+    STATUS_MSC_DIAMOND: handle_status_msc_diamond,
     ORDER_LOUNGE_BUTTON_TEXT: handle_order_lounge_button,
     REPORT_BOT_PROBLEM_BUTTON_TEXT: handle_report_bot_problem_button,
     ROUTES_PROBLEM_BUTTON_TEXT: handle_routes_problem_button,

@@ -33,7 +33,8 @@ ServiceKeyboard = ReplyKeyboardMarkup(is_persistent=True,
 AvailableStatusesKeyboard = ReplyKeyboardMarkup(is_persistent=True,
                                                 resize_keyboard=True,
                                                 one_time_keyboard=True,
-                                                keyboard=[[KeyboardButton(text=STATUS_AVOLTA_RADISSON)]])
+                                                keyboard=[[KeyboardButton(text=STATUS_AVOLTA_RADISSON)],
+                                                          [KeyboardButton(text=STATUS_MSC_DIAMOND)]])
 
 IssueKeyboard = ReplyKeyboardMarkup(is_persistent=True,
                                     resize_keyboard=True,

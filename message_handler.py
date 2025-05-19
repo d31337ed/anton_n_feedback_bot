@@ -20,7 +20,6 @@ message_router = Router()
 
 @message_router.message()
 async def input_handler(message: Message, state: FSMContext, bot: Bot) -> None:
-
     try:
         handler = handlers.get(message.text)
         if handler:
