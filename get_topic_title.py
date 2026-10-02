@@ -1,21 +1,15 @@
 import logging
-from os import getenv
 
-from dotenv import load_dotenv
 from telethon import TelegramClient
 from telethon.tl import functions
 from telethon.tl.types import PeerChannel, InputChannel
 
-load_dotenv()
-
-API_ID = int(getenv("API_ID"))
-API_HASH = getenv("API_HASH")
-CHAT_PEER_ID = int(getenv("CHAT_PEER_ID"))
+from settings import settings
 
 async def get_topic_title(topic_id: int):
     logging.info(f"Attempting to retrieve topic title for topic ID: {topic_id}")
-    async with TelegramClient("session_name", API_ID, API_HASH) as client:
-        peer = await client.get_input_entity(PeerChannel(CHAT_PEER_ID))
+    async with TelegramClient("session_name", settings.api_id, settings.api_hash) as client:
+        peer = await client.get_input_entity(PeerChannel(settings.chat_peer_id))
         chat_ref = InputChannel(channel_id=peer.channel_id,
                                 access_hash=peer.access_hash)
         logging.info(f"Got input entity for chat: {CHAT_PEER_ID}, channel ID: {peer.channel_id}")

@@ -20,6 +20,7 @@ pyaes==1.6.1
 pyasn1==0.6.1
 pydantic==2.10.6
 pydantic_core==2.27.2
+pydantic-settings==2.7.1
 pyTelegramBotAPI==4.26.0
 redis==5.2.1
 requests==2.32.3
