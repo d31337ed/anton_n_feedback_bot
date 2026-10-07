@@ -56,6 +56,9 @@ NO_TOPIC_TO_CLOSE = "🤷Сейчас нет открытых обращений
 DUPLICATED_ERROR = "✋Сейчас уже есть обращение в работе. Дождитесь его разрешения или закройте самостоятельно командой /close\nДополнить существующее обращение можно отправив любое сообщение боту"
 UR_BANNED = "😵Вы заблокированы. Сообщение не было обработано."
 
+# Access control
+UNAUTHORIZED_ACCESS_ALERT = "🚫Попытка доступа от неавторизованного пользователя\nID: {user_id}\nИмя: {user_name}\nUsername: @{username}"
+
 # Topic name templates
 IN_ADV_TOPIC = "📢Предложение рекламной интеграции от {user_name} [id={user_id}]"
 IN_SPECIAL_TOPIC = "⭐️Предложение спецпроекта от {user_name} [id={user_id}]"

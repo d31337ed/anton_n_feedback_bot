@@ -1,0 +1,12 @@
+services:
+  feedback-bot:
+    build: .
+    container_name: feedback-bot-test
+    env_file:
+      - .env.test
+    environment:
+      # Hardcoded safety net in case test and prod ever share a Redis host.
+      REDIS_DB: "15"
+    volumes:
+      - ./logs:/anton_n_feedback_bot/logs
+      - ./session_name.session:/anton_n_feedback_bot/session_name.session

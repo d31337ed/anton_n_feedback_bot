@@ -1,0 +1,13 @@
+services:
+  feedback-bot:
+    build: .
+    container_name: feedback-bot-prod
+    restart: unless-stopped
+    # Redis runs on the same host (REDIS_HOST=127.0.0.1 in .env.prod);
+    # host networking required so the container can reach it. Linux only.
+    network_mode: host
+    env_file:
+      - .env.prod
+    volumes:
+      - ./logs:/anton_n_feedback_bot/logs
+      - ./session_name.session:/anton_n_feedback_bot/session_name.session
