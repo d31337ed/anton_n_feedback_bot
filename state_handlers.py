@@ -94,11 +94,12 @@ async def process_public_question(message: Message, state: FSMContext, bot: Bot)
         topic_id = forum_topic.message_thread_id
         await state.set_data(data={"topic_id": topic_id})
         logging.info(f"Created new forum topic with ID: {topic_id} for user {user_id}")
-        await message.reply(text=INQUIRY_SENT_TEXT, parse_mode="html")
+        await message.reply(text=INQUIRY_SENT_TEXT, reply_markup=MainMenuKeyboard, parse_mode="html")
     else:
         topic_id = data["topic_id"]
         logging.info(f"Using existing forum topic with ID: {topic_id} for user {user_id}")
     await message.forward(chat_id=settings.chat_id, message_thread_id=topic_id)
+    await state.clear()
 
 @state_router.message(ServicesFlow.services_order_status_avolta_radisson)
 async def process_avolta_request(message: Message, state: FSMContext, bot: Bot) -> None:
@@ -113,18 +114,18 @@ async def process_avolta_request(message: Message, state: FSMContext, bot: Bot) 
         topic_id = forum_topic.message_thread_id
         await state.set_data(data={"topic_id": topic_id})
         logging.info(f"Created new forum topic with ID: {topic_id} for user {user_id}")
-        await message.reply(text=ORDER_STATUS_CERTAIN_TEXT, parse_mode="html")
+        await message.reply(text=ORDER_STATUS_RECEIVED_TEXT, parse_mode="html")
     else:
         topic_id = data["topic_id"]
         logging.info(f"Using existing forum topic with ID: {topic_id} for user {user_id}")
     await message.forward(chat_id=settings.chat_id, message_thread_id=topic_id)
 
-@state_router.message(ServicesFlow.services_order_status_match_state)
+@state_router.message(ServicesFlow.services_order_status_msc_diamond)
 async def process_msc_request(message: Message, state: FSMContext, bot: Bot) -> None:
     user_id = str(message.from_user.id)
     user_name = message.from_user.full_name
     data = await state.get_data()
-    logging.info(f"Received message from user {user_id}, Name: {user_name}, ServiceFlow.services_order_status_avolta_radisson")
+    logging.info(f"Received message from user {user_id}, Name: {user_name}, ServicesFlow.services_order_status_msc_diamond")
     if not data:
         forum_topic = await bot.create_forum_topic(chat_id=settings.chat_id,
                                                    name=MSC_TOPIC.format(user_name=user_name,
@@ -132,7 +133,7 @@ async def process_msc_request(message: Message, state: FSMContext, bot: Bot) -> 
         topic_id = forum_topic.message_thread_id
         await state.set_data(data={"topic_id": topic_id})
         logging.info(f"Created new forum topic with ID: {topic_id} for user {user_id}")
-        await message.reply(text=ORDER_STATUS_CERTAIN_TEXT, parse_mode="html")
+        await message.reply(text=ORDER_STATUS_RECEIVED_TEXT, parse_mode="html")
     else:
         topic_id = data["topic_id"]
         logging.info(f"Using existing forum topic with ID: {topic_id} for user {user_id}")
