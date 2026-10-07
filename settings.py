@@ -20,9 +20,16 @@ class Settings(BaseSettings):
     api_hash: str
     chat_peer_id: int
 
+    # Comma-separated user IDs. Empty = no restriction (prod default).
+    allowed_user_ids: str = ""
+
     @property
     def bot_id(self) -> int:
         return int(self.bot_token.split(":")[0])
+
+    @property
+    def allowed_user_ids_set(self) -> set[int]:
+        return {int(uid) for uid in self.allowed_user_ids.split(",") if uid.strip()}
 
 
 @lru_cache

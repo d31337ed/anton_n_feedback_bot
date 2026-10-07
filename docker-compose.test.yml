@@ -5,8 +5,7 @@ services:
     env_file:
       - .env.test
     environment:
-      # Хардкод "на всякий случай": даже если тестовый Redis когда-нибудь
-      # окажется тем же хостом, что и прод, они не пересекутся по базе.
+      # Hardcoded safety net in case test and prod ever share a Redis host.
       REDIS_DB: "15"
     volumes:
       - ./logs:/anton_n_feedback_bot/logs

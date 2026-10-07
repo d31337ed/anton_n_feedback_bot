@@ -1,5 +1,6 @@
 import logging
-from aiogram import Router, Bot
+from aiogram import Router, Bot, F
+from aiogram.enums import ChatType
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
@@ -8,6 +9,9 @@ from keyboards import *
 from settings import settings
 
 state_router = Router()
+# Customer flows only happen in private chats - keeps stray FSM state from
+# ever matching replies sent inside the support group's forum topics.
+state_router.message.filter(F.chat.type == ChatType.PRIVATE)
 
 @state_router.message(AdvFlow.adv_in_offer_state)
 async def process_public_question(message: Message, state: FSMContext, bot: Bot) -> None:

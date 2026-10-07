@@ -3,12 +3,8 @@ services:
     build: .
     container_name: feedback-bot-prod
     restart: unless-stopped
-    # REDIS_HOST в .env.prod = 127.0.0.1, т.е. сейчас бот достаёт Redis как
-    # сервис на том же хосте. В изолированной bridge-сети compose по умолчанию
-    # 127.0.0.1 внутри контейнера - это сам контейнер, а не хост, поэтому
-    # нужна host-сеть. Работает на Linux (типичная удалённая машина); если
-    # прод-машина на другой ОС или Redis в отдельном контейнере - скажите,
-    # поправим на явную docker-сеть вместо network_mode: host.
+    # Redis runs on the same host (REDIS_HOST=127.0.0.1 in .env.prod);
+    # host networking required so the container can reach it. Linux only.
     network_mode: host
     env_file:
       - .env.prod

@@ -12,7 +12,7 @@ async def get_topic_title(topic_id: int):
         peer = await client.get_input_entity(PeerChannel(settings.chat_peer_id))
         chat_ref = InputChannel(channel_id=peer.channel_id,
                                 access_hash=peer.access_hash)
-        logging.info(f"Got input entity for chat: {CHAT_PEER_ID}, channel ID: {peer.channel_id}")
+        logging.info(f"Got input entity for chat: {settings.chat_peer_id}, channel ID: {peer.channel_id}")
         result = await client(functions.channels.GetForumTopicsByIDRequest(channel=chat_ref,
                                                                            topics=[topic_id]))
         logging.info(f"Successfully retrieved topic title: {result.topics[0].title} for topic ID: {topic_id}")

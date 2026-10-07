@@ -24,11 +24,25 @@ dp = Dispatcher()
 bot = Bot(token=settings.bot_token)
 
 
+async def access_control_middleware(handler, event: Message, data: dict):
+    allowed = settings.allowed_user_ids_set
+    user = event.from_user
+    if allowed and user and user.id != settings.bot_id and user.id not in allowed:
+        logging.warning(f"Blocked message from unauthorized user {user.id} (@{user.username})")
+        await bot.send_message(chat_id=settings.chat_id,
+                               message_thread_id=settings.error_topic_id,
+                               text=UNAUTHORIZED_ACCESS_ALERT.format(user_id=user.id,
+                                                                     user_name=user.full_name,
+                                                                     username=user.username or "-"))
+        return
+    return await handler(event, data)
+
 async def main() -> None:
     global storage, dp
     redis = AioRedis(host=settings.redis_host, port=settings.redis_port, db=settings.redis_db)
     storage = RedisStorage(redis)
     dp = Dispatcher(storage=storage)
+    dp.message.outer_middleware(access_control_middleware)
     dp.include_router(router)
     dp.include_router(state_handlers.state_router)
     dp.include_router(message_handler.message_router)
