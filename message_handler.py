@@ -4,9 +4,9 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
 from button_handlers import handlers
-from get_topic_title import get_topic_title
 from keyboards import *
 from settings import settings
+from topic_registry import get_topic_user_id
 
 message_router = Router()
 
@@ -14,8 +14,13 @@ message_router = Router()
 async def input_handler(message: Message, state: FSMContext, bot: Bot) -> None:
     try:
         if message.message_thread_id is not None and message.from_user.id != settings.bot_id:
-            title = await get_topic_title(message.message_thread_id)
-            reply_to_chat_id = title.split("[id=")[-1][:-1]
+            reply_to_chat_id = await get_topic_user_id(message.message_thread_id)
+            if reply_to_chat_id is None:
+                logging.warning(f"No user registered for forum topic {message.message_thread_id}")
+                if message.message_thread_id != settings.error_topic_id:
+                    await bot.send_message(text=f"No user registered for topic ID={message.message_thread_id}, message not delivered",
+                                           chat_id=settings.chat_id, message_thread_id=settings.error_topic_id)
+                return
             await bot.copy_message(chat_id=reply_to_chat_id, from_chat_id=settings.chat_id, message_id=message.message_id)
             return
         handler = handlers.get(message.text)

@@ -7,6 +7,7 @@ from aiogram.types import Message
 from states import *
 from keyboards import *
 from settings import settings
+from topic_registry import create_topic
 
 state_router = Router()
 # Customer flows only happen in private chats - keeps stray FSM state from
@@ -20,11 +21,9 @@ async def process_public_question(message: Message, state: FSMContext, bot: Bot)
     data = await state.get_data()
     logging.info(f"Received message from user {user_id}, Name: {user_name}, AdvFlow.adv_in_offer_state")
     if not data:
-        forum_topic = await bot.create_forum_topic(chat_id=settings.chat_id,
-                                                   name=IN_ADV_TOPIC.format(user_name=user_name,
-                                                                            user_id=user_id))
-        topic_id = forum_topic.message_thread_id
-        await state.set_data(data={"topic_id": forum_topic.message_thread_id})
+        topic_id = await create_topic(bot, user_id=user_id,
+                                      name=IN_ADV_TOPIC.format(user_name=user_name, user_id=user_id))
+        await state.set_data(data={"topic_id": topic_id})
         logging.info(f"Created new forum topic with ID: {topic_id} for user {user_id}")
         await message.reply(text=ADV_OFFER_RECEIVED_TEXT, parse_mode="html")
     else:
@@ -39,11 +38,9 @@ async def process_public_question(message: Message, state: FSMContext, bot: Bot)
     data = await state.get_data()
     logging.info(f"Received message from user {user_id}, Name: {user_name}, AdvFlow.adv_in_special_offer_state")
     if not data:
-        forum_topic = await bot.create_forum_topic(chat_id=settings.chat_id,
-                                                   name=IN_SPECIAL_TOPIC.format(user_name=user_name,
-                                                                            user_id=user_id))
-        topic_id = forum_topic.message_thread_id
-        await state.set_data(data={"topic_id": forum_topic.message_thread_id})
+        topic_id = await create_topic(bot, user_id=user_id,
+                                      name=IN_SPECIAL_TOPIC.format(user_name=user_name, user_id=user_id))
+        await state.set_data(data={"topic_id": topic_id})
         logging.info(f"Created new forum topic with ID: {topic_id} for user {user_id}")
         await message.reply(text=ADV_OFFER_RECEIVED_TEXT, parse_mode="html")
     else:
@@ -58,11 +55,9 @@ async def process_hotel_request(message: Message, state: FSMContext, bot: Bot) -
     data = await state.get_data()
     logging.info(f"Received message from user {user_id}, Name: {user_name}, ServicesFlow.services_book_hotel_state")
     if not data:
-        forum_topic = await bot.create_forum_topic(chat_id=settings.chat_id,
-                                                   name=HOTEL_REQUEST_TOPIC.format(user_name=user_name,
-                                                                                   user_id=user_id))
-        topic_id = forum_topic.message_thread_id
-        await state.set_data(data={"topic_id": forum_topic.message_thread_id})
+        topic_id = await create_topic(bot, user_id=user_id,
+                                      name=HOTEL_REQUEST_TOPIC.format(user_name=user_name, user_id=user_id))
+        await state.set_data(data={"topic_id": topic_id})
         logging.info(f"Created new forum topic with ID: {topic_id} for user {user_id}")
         await message.reply(text=HOTEL_REQUEST_RECEIVED_TEXT, parse_mode="html")
     else:
@@ -74,10 +69,10 @@ async def process_hotel_request(message: Message, state: FSMContext, bot: Bot) -
 async def process_public_question(message: Message, state: FSMContext, bot: Bot) -> None:
     user_id = str(message.from_user.id)
     user_name = message.from_user.full_name
-    forum_topic = await bot.create_forum_topic(chat_id=settings.chat_id, name=PUBLIC_QUESTION_TOPIC.format(user_name=user_name,
-                                                                                                  user_id=user_id))
-    logging.info(f"Created public question forum topic for user {user_id} with topic ID: {forum_topic.message_thread_id}")
-    await message.forward(chat_id=settings.chat_id, message_thread_id=forum_topic.message_thread_id)
+    topic_id = await create_topic(bot, user_id=user_id,
+                                  name=PUBLIC_QUESTION_TOPIC.format(user_name=user_name, user_id=user_id))
+    logging.info(f"Created public question forum topic for user {user_id} with topic ID: {topic_id}")
+    await message.forward(chat_id=settings.chat_id, message_thread_id=topic_id)
     await message.reply(text=INQUIRY_SENT_TEXT, reply_markup=MainMenuKeyboard, parse_mode="html")
     await state.clear()
 
@@ -88,10 +83,8 @@ async def process_public_question(message: Message, state: FSMContext, bot: Bot)
     data = await state.get_data()
     logging.info(f"Received message from user {user_id}, Name: {user_name}, WelcomeFlow.other_inquiries_state")
     if not data:
-        forum_topic = await bot.create_forum_topic(chat_id=settings.chat_id,
-                                                   name=OTHERS_TOPIC.format(user_name=user_name,
-                                                                            user_id=user_id))
-        topic_id = forum_topic.message_thread_id
+        topic_id = await create_topic(bot, user_id=user_id,
+                                      name=OTHERS_TOPIC.format(user_name=user_name, user_id=user_id))
         await state.set_data(data={"topic_id": topic_id})
         logging.info(f"Created new forum topic with ID: {topic_id} for user {user_id}")
         await message.reply(text=INQUIRY_SENT_TEXT, reply_markup=MainMenuKeyboard, parse_mode="html")
@@ -108,10 +101,8 @@ async def process_avolta_request(message: Message, state: FSMContext, bot: Bot) 
     data = await state.get_data()
     logging.info(f"Received message from user {user_id}, Name: {user_name}, ServiceFlow.services_order_status_avolta_radisson")
     if not data:
-        forum_topic = await bot.create_forum_topic(chat_id=settings.chat_id,
-                                                   name=AVOLTA_TOPIC.format(user_name=user_name,
-                                                                            user_id=user_id))
-        topic_id = forum_topic.message_thread_id
+        topic_id = await create_topic(bot, user_id=user_id,
+                                      name=AVOLTA_TOPIC.format(user_name=user_name, user_id=user_id))
         await state.set_data(data={"topic_id": topic_id})
         logging.info(f"Created new forum topic with ID: {topic_id} for user {user_id}")
         await message.reply(text=ORDER_STATUS_RECEIVED_TEXT, parse_mode="html")
@@ -127,10 +118,8 @@ async def process_msc_request(message: Message, state: FSMContext, bot: Bot) -> 
     data = await state.get_data()
     logging.info(f"Received message from user {user_id}, Name: {user_name}, ServicesFlow.services_order_status_msc_diamond")
     if not data:
-        forum_topic = await bot.create_forum_topic(chat_id=settings.chat_id,
-                                                   name=MSC_TOPIC.format(user_name=user_name,
-                                                                            user_id=user_id))
-        topic_id = forum_topic.message_thread_id
+        topic_id = await create_topic(bot, user_id=user_id,
+                                      name=MSC_TOPIC.format(user_name=user_name, user_id=user_id))
         await state.set_data(data={"topic_id": topic_id})
         logging.info(f"Created new forum topic with ID: {topic_id} for user {user_id}")
         await message.reply(text=ORDER_STATUS_RECEIVED_TEXT, parse_mode="html")
@@ -143,11 +132,10 @@ async def process_msc_request(message: Message, state: FSMContext, bot: Bot) -> 
 async def process_public_question(message: Message, state: FSMContext, bot: Bot) -> None:
     user_id = str(message.from_user.id)
     user_name = message.from_user.full_name
-    forum_topic = await bot.create_forum_topic(chat_id=settings.chat_id,
-                                               name=ISSUE_BOT_TOPIC.format(user_name=user_name,
-                                                                           user_id=user_id))
-    logging.info(f"Created bot issue forum topic for user {user_id} with topic ID: {forum_topic.message_thread_id}")
-    await message.forward(chat_id=settings.chat_id, message_thread_id=forum_topic.message_thread_id)
+    topic_id = await create_topic(bot, user_id=user_id,
+                                  name=ISSUE_BOT_TOPIC.format(user_name=user_name, user_id=user_id))
+    logging.info(f"Created bot issue forum topic for user {user_id} with topic ID: {topic_id}")
+    await message.forward(chat_id=settings.chat_id, message_thread_id=topic_id)
     await message.reply(text=PROBLEM_RECEIVED_TEXT, reply_markup=MainMenuKeyboard, parse_mode="html")
     await state.clear()
 
@@ -155,11 +143,10 @@ async def process_public_question(message: Message, state: FSMContext, bot: Bot)
 async def process_public_question(message: Message, state: FSMContext, bot: Bot) -> None:
     user_id = str(message.from_user.id)
     user_name = message.from_user.full_name
-    forum_topic = await bot.create_forum_topic(chat_id=settings.chat_id,
-                                               name=ISSUE_ROUTES_TOPIC.format(user_name=user_name,
-                                                                              user_id=user_id))
-    logging.info(f"Created routes issue forum topic for user {user_id} with topic ID: {forum_topic.message_thread_id}")
-    await message.forward(chat_id=settings.chat_id, message_thread_id=forum_topic.message_thread_id)
+    topic_id = await create_topic(bot, user_id=user_id,
+                                  name=ISSUE_ROUTES_TOPIC.format(user_name=user_name, user_id=user_id))
+    logging.info(f"Created routes issue forum topic for user {user_id} with topic ID: {topic_id}")
+    await message.forward(chat_id=settings.chat_id, message_thread_id=topic_id)
     await message.reply(text=PROBLEM_RECEIVED_TEXT, reply_markup=MainMenuKeyboard, parse_mode="html")
     await state.clear()
 
@@ -167,9 +154,9 @@ async def process_public_question(message: Message, state: FSMContext, bot: Bot)
 async def process_public_question(message: Message, state: FSMContext, bot: Bot) -> None:
     user_id = str(message.from_user.id)
     user_name = message.from_user.full_name
-    forum_topic = await bot.create_forum_topic(chat_id=settings.chat_id,
-                                               name=ISSUE_TYPO_TOPIC.format(user_name=user_name, user_id=user_id))
-    logging.info(f"Created typo issue forum topic for user {user_id} with topic ID: {forum_topic.message_thread_id}")
-    await message.forward(chat_id=settings.chat_id, message_thread_id=forum_topic.message_thread_id)
+    topic_id = await create_topic(bot, user_id=user_id,
+                                  name=ISSUE_TYPO_TOPIC.format(user_name=user_name, user_id=user_id))
+    logging.info(f"Created typo issue forum topic for user {user_id} with topic ID: {topic_id}")
+    await message.forward(chat_id=settings.chat_id, message_thread_id=topic_id)
     await message.reply(text=PROBLEM_RECEIVED_TEXT, reply_markup=MainMenuKeyboard, parse_mode="html")
     await state.clear()

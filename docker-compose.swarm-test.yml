@@ -6,19 +6,14 @@ services:
     secrets:
       - source: bot_token_test
         target: bot_token
-      - source: api_hash_test
-        target: api_hash
     environment:
       REDIS_DB: "15"
     volumes:
       - ./logs:/anton_n_feedback_bot/logs
-      - ./session_name.session:/anton_n_feedback_bot/session_name.session
     deploy:
       restart_policy:
         condition: any
 
 secrets:
   bot_token_test:
-    external: true
-  api_hash_test:
     external: true

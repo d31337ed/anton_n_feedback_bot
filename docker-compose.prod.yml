@@ -12,11 +12,8 @@ services:
     secrets:
       - source: bot_token_prod
         target: bot_token
-      - source: api_hash_prod
-        target: api_hash
     volumes:
       - ./logs:/anton_n_feedback_bot/logs
-      - ./session_name.session:/anton_n_feedback_bot/session_name.session
     deploy:
       restart_policy:
         condition: any
@@ -28,6 +25,4 @@ networks:
 
 secrets:
   bot_token_prod:
-    external: true
-  api_hash_prod:
     external: true
