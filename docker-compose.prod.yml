@@ -1,6 +1,6 @@
 services:
   feedback-bot:
-    image: sjc.vultrcr.com/dockerregistry/hilton-bot:latest
+    image: sjc.vultrcr.com/dockerregistry/anton_n_feedback_bot:latest
     # Redis runs on the same host (REDIS_HOST=127.0.0.1 in .env.prod);
     # host networking required so the container can reach it. Linux only.
     network_mode: host
