@@ -1,13 +1,25 @@
 services:
   feedback-bot:
-    build: .
-    container_name: feedback-bot-prod
-    restart: unless-stopped
+    image: sjc.vultrcr.com/dockerregistry/hilton-bot:latest
     # Redis runs on the same host (REDIS_HOST=127.0.0.1 in .env.prod);
     # host networking required so the container can reach it. Linux only.
     network_mode: host
     env_file:
       - .env.prod
+    secrets:
+      - source: bot_token_prod
+        target: bot_token
+      - source: api_hash_prod
+        target: api_hash
     volumes:
       - ./logs:/anton_n_feedback_bot/logs
       - ./session_name.session:/anton_n_feedback_bot/session_name.session
+    deploy:
+      restart_policy:
+        condition: any
+
+secrets:
+  bot_token_prod:
+    external: true
+  api_hash_prod:
+    external: true
