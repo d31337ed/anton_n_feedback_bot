@@ -1,9 +1,12 @@
 services:
   feedback-bot:
     image: sjc.vultrcr.com/dockerregistry/anton_n_feedback_bot:latest
-    # Redis runs on the same host (REDIS_HOST=127.0.0.1 in .env.prod);
-    # host networking required so the container can reach it. Linux only.
-    network_mode: host
+    # Swarm's `docker stack deploy` ignores the compose `network_mode: host`
+    # shorthand. Attaching to the pre-existing system "host" network instead
+    # gets the same effect: REDIS_HOST=127.0.0.1 in .env.prod reaches the
+    # host's Redis directly, same as before the Swarm migration.
+    networks:
+      - hostnet
     env_file:
       - .env.prod
     secrets:
@@ -17,6 +20,11 @@ services:
     deploy:
       restart_policy:
         condition: any
+
+networks:
+  hostnet:
+    external: true
+    name: host
 
 secrets:
   bot_token_prod:
