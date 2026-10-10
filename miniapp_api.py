@@ -53,6 +53,15 @@ async def index(request: web.Request) -> web.FileResponse:
     return web.FileResponse(WEBAPP_DIR / "index.html", headers={"Cache-Control": "no-cache"})
 
 
+async def robots(request: web.Request) -> web.Response:
+    return web.Response(text="User-agent: *\nDisallow: /\n")
+
+
+async def add_noindex(request: web.Request, response: web.StreamResponse) -> None:
+    # The form is reachable only from the bot; keep it out of search engines.
+    response.headers["X-Robots-Tag"] = "noindex, nofollow"
+
+
 async def get_request(request: web.Request) -> web.Response:
     user = authorize(request)
     try:
@@ -104,7 +113,9 @@ async def submit_request(request: web.Request) -> web.Response:
 def create_app(bot: Bot) -> web.Application:
     app = web.Application(client_max_size=64 * 1024)
     app[BOT] = bot
+    app.on_response_prepare.append(add_noindex)
     app.router.add_get("/", index)
+    app.router.add_get("/robots.txt", robots)
     app.router.add_static("/assets", WEBAPP_DIR / "assets")
     app.router.add_get("/api/request", get_request)
     app.router.add_post("/api/request", submit_request)
