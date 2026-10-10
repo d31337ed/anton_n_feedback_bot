@@ -5,6 +5,7 @@ from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
+from button_handlers import handlers as button_handlers
 from states import *
 from keyboards import *
 from settings import settings
@@ -13,7 +14,8 @@ from topic_registry import create_topic
 state_router = Router()
 # Customer flows only happen in private chats - keeps stray FSM state from
 # ever matching replies sent inside the support group's forum topics.
-state_router.message.filter(F.chat.type == ChatType.PRIVATE)
+# Button texts always navigate and are never forwarded as part of an inquiry.
+state_router.message.filter(F.chat.type == ChatType.PRIVATE, ~F.text.in_(button_handlers.keys()))
 
 
 async def forward_to_topic(bot: Bot, message: Message, album: list[Message] | None, topic_id: int) -> None:
