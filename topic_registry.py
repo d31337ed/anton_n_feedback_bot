@@ -47,11 +47,11 @@ async def close_topic(bot: Bot, topic_id: int) -> None:
 
 
 async def show_main_menu_silently(bot: Bot, user_id: int) -> None:
-    # A reply keyboard can only arrive with a message: send it without sound and delete it right away.
+    # A reply keyboard can only arrive with a message, and clients drop it once that message is deleted,
+    # so the message stays - just without a notification sound.
     try:
-        menu_message = await bot.send_message(chat_id=user_id, text=INQUIRY_CLOSED, reply_markup=MainMenuKeyboard,
-                                              parse_mode="html", disable_notification=True)
-        await bot.delete_message(chat_id=user_id, message_id=menu_message.message_id)
+        await bot.send_message(chat_id=user_id, text=INQUIRY_CLOSED, reply_markup=MainMenuKeyboard,
+                               parse_mode="html", disable_notification=True)
         logging.info(f"Silently restored main menu for user {user_id}")
     except TelegramForbiddenError:
         logging.warning(f"User {user_id} blocked the bot, main menu not restored")
