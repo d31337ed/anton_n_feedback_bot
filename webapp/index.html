@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Заявка на спецтариф</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<main>
+  <section id="screen-loading" class="screen notice">
+    <p class="hint">Загружаю заявку…</p>
+  </section>
+
+  <section id="screen-notice" class="screen notice" hidden>
+    <p id="notice-text"></p>
+    <button id="notice-retry" type="button" class="link-button" hidden>Попробовать ещё раз</button>
+  </section>
+
+  <form id="screen-form" class="screen" hidden novalidate>
+    <div class="segmented" role="radiogroup" aria-label="Режим">
+      <button type="button" role="radio" data-mode="hotel">Конкретный отель</button>
+      <button type="button" role="radio" data-mode="city">Подбор в городе</button>
+    </div>
+
+    <div class="field" data-modes="hotel">
+      <label class="label" for="hotel">Отель</label>
+      <input class="card input" id="hotel" name="hotel" type="text" maxlength="200" placeholder="Например, Conrad Tokyo" autocomplete="off">
+      <p class="error" data-error="hotel"></p>
+    </div>
+
+    <div class="field" data-modes="city">
+      <label class="label" for="city">Город</label>
+      <input class="card input" id="city" name="city" type="text" maxlength="200" placeholder="Например, Токио" autocomplete="off">
+      <p class="error" data-error="city"></p>
+    </div>
+
+    <div class="field" data-modes="city">
+      <label class="label" for="price_cap">Потолок цены за ночь, USD <span class="optional">— необязательно</span></label>
+      <input class="card input" id="price_cap" name="price_cap" type="number" inputmode="numeric" min="1" step="1" placeholder="Например, 400">
+      <p class="error" data-error="price_cap"></p>
+    </div>
+
+    <div class="field">
+      <span class="label">Даты и гости</span>
+      <div class="card">
+        <label class="row" for="check_in"><span>Заезд</span><input id="check_in" name="check_in" type="date"></label>
+        <p class="error inset" data-error="check_in"></p>
+        <div class="separator"></div>
+        <label class="row" for="check_out"><span>Выезд <span id="nights" class="hint"></span></span><input id="check_out" name="check_out" type="date"></label>
+        <p class="error inset" data-error="check_out"></p>
+        <div class="separator"></div>
+        <div class="row">
+          <span id="adults-label">Взрослые</span>
+          <div class="stepper" role="group" aria-labelledby="adults-label">
+            <button type="button" data-step="adults" data-delta="-1" aria-label="Меньше взрослых">−</button>
+            <output id="adults" name="adults"></output>
+            <button type="button" data-step="adults" data-delta="1" aria-label="Больше взрослых">+</button>
+          </div>
+        </div>
+        <div class="separator"></div>
+        <div class="row">
+          <span id="children-label">Дети</span>
+          <div class="stepper" role="group" aria-labelledby="children-label">
+            <button type="button" data-step="children" data-delta="-1" aria-label="Меньше детей">−</button>
+            <output id="children" name="children"></output>
+            <button type="button" data-step="children" data-delta="1" aria-label="Больше детей">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <span class="label" id="room-label">Тип номера</span>
+      <div class="chips" role="radiogroup" aria-labelledby="room-label">
+        <button type="button" role="radio" data-room="Стандартный">Стандартный</button>
+        <button type="button" role="radio" data-room="Делюкс">Делюкс</button>
+        <button type="button" role="radio" data-room="Люкс">Люкс</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="label" for="comment">Комментарий <span class="optional">— необязательно</span></label>
+      <textarea class="card input" id="comment" name="comment" rows="3" maxlength="2000" placeholder="Например: годовщина, тихий номер"></textarea>
+      <p class="error" data-error="comment"></p>
+    </div>
+  </form>
+
+  <section id="screen-review" class="screen" hidden>
+    <p class="hint intro">Так заявка придёт в чат. Если всё верно — отправляйте.</p>
+    <div id="review-list" class="card"></div>
+    <p id="review-error" class="error banner" hidden></p>
+  </section>
+</main>
+<script src="assets/app.js"></script>
+</body>
+</html>

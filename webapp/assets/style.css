@@ -1,0 +1,146 @@
+/* Colors come from Telegram's theme variables; fallbacks keep the page readable in a plain browser. */
+:root {
+  --bg: var(--tg-theme-secondary-bg-color, #eff2f5);
+  --card: var(--tg-theme-section-bg-color, var(--tg-theme-bg-color, #ffffff));
+  --text: var(--tg-theme-text-color, #16202a);
+  --hint: var(--tg-theme-hint-color, #5a6873);
+  --accent: var(--tg-theme-button-color, #2b6ca3);
+  --accent-text: var(--tg-theme-button-text-color, #ffffff);
+  --link: var(--tg-theme-link-color, #2b6ca3);
+  --separator: var(--tg-theme-section-separator-color, rgba(127, 127, 127, 0.2));
+  --danger: var(--tg-theme-destructive-text-color, #d14343);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+
+main { max-width: 560px; margin: 0 auto; padding: 16px 16px 32px; }
+
+.screen { display: flex; flex-direction: column; gap: 16px; }
+.screen[hidden], [hidden] { display: none !important; }
+
+.notice { min-height: 60vh; justify-content: center; align-items: center; text-align: center; }
+.notice p { margin: 0; font-size: 16px; }
+
+.hint { color: var(--hint); }
+.intro { margin: 0 4px; font-size: 14px; }
+.optional { color: var(--hint); font-weight: 400; }
+
+.field { display: flex; flex-direction: column; }
+.label { display: block; margin: 0 4px 6px; font-size: 13px; color: var(--hint); }
+
+.card { background: var(--card); border-radius: 12px; }
+
+.input {
+  width: 100%;
+  min-height: 44px;
+  border: 0;
+  padding: 11px 14px;
+  font: inherit;
+  color: var(--text);
+  outline: none;
+}
+textarea.input { resize: vertical; }
+.input:focus { box-shadow: inset 0 0 0 2px var(--accent); }
+.input::placeholder { color: var(--hint); opacity: 0.7; }
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  padding: 0 14px;
+}
+.row input[type="date"] {
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--link);
+  font-weight: 500;
+  text-align: right;
+  min-height: 44px;
+  color-scheme: light dark;
+}
+.separator { height: 1px; background: var(--separator); margin-left: 14px; }
+
+.segmented {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 10px;
+  background: var(--separator);
+}
+.segmented button {
+  min-height: 38px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  color: var(--hint);
+}
+.segmented button[aria-checked="true"] { background: var(--card); color: var(--text); font-weight: 500; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chips button {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--separator);
+  border-radius: 18px;
+  background: var(--card);
+  font: inherit;
+  font-size: 14px;
+  color: var(--text);
+}
+.chips button[aria-checked="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+
+.stepper { display: flex; align-items: center; gap: 4px; }
+.stepper button {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--bg);
+  font-size: 20px;
+  line-height: 1;
+  color: var(--link);
+}
+.stepper button:disabled { opacity: 0.4; }
+.stepper output { min-width: 28px; text-align: center; font-weight: 500; }
+
+.error { margin: 4px 4px 0; font-size: 13px; color: var(--danger); }
+.error:empty { display: none; }
+.error.inset { margin: 0 14px 8px; }
+.error.banner { margin: 0 4px; }
+
+.review-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+}
+.review-item + .review-item { border-top: 1px solid var(--separator); }
+.review-key { font-size: 13px; color: var(--hint); }
+.review-value { margin-top: 2px; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+.link-button {
+  border: 0;
+  background: none;
+  padding: 0;
+  min-height: 44px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--link);
+  flex: none;
+}
+.review-item .link-button { margin: -12px 0; }
