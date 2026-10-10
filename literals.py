@@ -71,3 +71,8 @@ ISSUE_BOT_TOPIC = "🤖Проблема с ботом от {user_name} [id={user
 ISSUE_ROUTES_TOPIC  = "✈️Проблема с routes.de1337ed.ru от {user_name} [id={user_id}]"
 ISSUE_TYPO_TOPIC  = "✍️Опечатка/неточность от {user_name} [id={user_id}]"
 OTHERS_TOPIC = "🌀Иное от {user_name} [id={user_id}]"
+
+# First message in a new topic
+USER_CARD = "👤<b>{full_name}</b>\nНик: {username}\nПрофиль: {profile_link}\nID: <code>{user_id}</code>"
+USER_CARD_NO_USERNAME = "нет"
+USER_CARD_PROFILE_LINK_TEXT = "открыть"

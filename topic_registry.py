@@ -1,3 +1,4 @@
+import html
 import logging
 
 from aiogram import Bot
@@ -5,10 +6,11 @@ from aiogram.exceptions import TelegramBadRequest, TelegramForbiddenError
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.base import StorageKey
 from aiogram.fsm.storage.redis import RedisStorage
+from aiogram.types import User
 from redis.asyncio import Redis
 
 from keyboards import MainMenuKeyboard
-from literals import INQUIRY_CLOSED
+from literals import INQUIRY_CLOSED, USER_CARD, USER_CARD_NO_USERNAME, USER_CARD_PROFILE_LINK_TEXT
 from settings import settings
 
 # Shared client and FSM storage: main.py hands the same storage to the dispatcher.
@@ -20,11 +22,21 @@ def topic_key(topic_id: int) -> str:
     return f"topic:{topic_id}"
 
 
-async def create_topic(bot: Bot, name: str, user_id: str) -> int:
+def user_card(user: User) -> str:
+    profile_url = f"https://t.me/{user.username}" if user.username else f"tg://user?id={user.id}"
+    return USER_CARD.format(full_name=html.escape(user.full_name),
+                            username=f"@{user.username}" if user.username else USER_CARD_NO_USERNAME,
+                            profile_link=f'<a href="{profile_url}">{USER_CARD_PROFILE_LINK_TEXT}</a>',
+                            user_id=user.id)
+
+
+async def create_topic(bot: Bot, name: str, user: User) -> int:
     forum_topic = await bot.create_forum_topic(chat_id=settings.chat_id, name=name)
     topic_id = forum_topic.message_thread_id
-    await redis.set(topic_key(topic_id), user_id)
-    logging.info(f"Registered forum topic {topic_id} for user {user_id}")
+    await redis.set(topic_key(topic_id), str(user.id))
+    logging.info(f"Registered forum topic {topic_id} for user {user.id}")
+    # The card goes first, before any forwarded user message.
+    await bot.send_message(chat_id=settings.chat_id, message_thread_id=topic_id, text=user_card(user), parse_mode="html")
     return topic_id
 
 
