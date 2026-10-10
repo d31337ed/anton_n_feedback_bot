@@ -1,5 +1,10 @@
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from literals import *
+from settings import settings
+
+# Callback data of the hotel entry message.
+HOTEL_RULES_CALLBACK = "hotel:rules"
+HOTEL_COLLAPSE_CALLBACK = "hotel:collapse"
 
 MainMenuKeyboard = ReplyKeyboardMarkup(is_persistent=True,
                                        resize_keyboard=True,
@@ -43,3 +48,19 @@ IssueKeyboard = ReplyKeyboardMarkup(is_persistent=True,
                                               [KeyboardButton(text=ROUTES_PROBLEM_BUTTON_TEXT)],
                                               [KeyboardButton(text=TYPO_PROBLEM_BUTTON_TEXT)]])
 
+
+def hotel_form_button(text: str, query: str) -> InlineKeyboardButton:
+    return InlineKeyboardButton(text=text, web_app=WebAppInfo(url=f"{settings.webapp_url}?{query}"))
+
+
+HotelEntryKeyboard = InlineKeyboardMarkup(inline_keyboard=[
+    [hotel_form_button(HOTEL_FORM_BUTTON_TEXT, "mode=new")],
+    [InlineKeyboardButton(text=HOTEL_RULES_BUTTON_TEXT, callback_data=HOTEL_RULES_CALLBACK)]])
+
+HotelRulesKeyboard = InlineKeyboardMarkup(inline_keyboard=[
+    [hotel_form_button(HOTEL_FORM_ALT_BUTTON_TEXT, "mode=new")],
+    [InlineKeyboardButton(text=HOTEL_COLLAPSE_BUTTON_TEXT, callback_data=HOTEL_COLLAPSE_CALLBACK)]])
+
+
+def hotel_edit_keyboard(request_id: int) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(inline_keyboard=[[hotel_form_button(HOTEL_EDIT_BUTTON_TEXT, f"request_id={request_id}")]])

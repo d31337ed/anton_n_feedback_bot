@@ -3,7 +3,7 @@ from aiogram.fsm.state import State
 from aiogram.types import Message
 
 from keyboards import MainMenuKeyboard, QuestionKeyboard, AdvKeyboard, ServiceKeyboard, IssueKeyboard, \
-    AvailableStatusesKeyboard
+    AvailableStatusesKeyboard, HotelEntryKeyboard
 from states import WelcomeFlow, AdvFlow, ServicesFlow, QuestionFlow, ReportIssueFlow
 from literals import *
 
@@ -89,8 +89,7 @@ async def handle_book_hotel_button(message: Message, state: FSMContext):
     if await blocked_by_active_inquiry(message, state, ServicesFlow.services_book_hotel_state):
         return
     await state.set_state(ServicesFlow.services_book_hotel_state)
-    await message.reply(text=BOOK_HOTEL_TEXT, parse_mode="html",
-                        link_preview_options={"is_disabled": True})
+    await message.reply(text=HOTEL_ENTRY_TEXT, parse_mode="html", reply_markup=HotelEntryKeyboard)
 
 async def handle_order_status_button(message: Message, state: FSMContext):
     if await blocked_by_active_inquiry(message, state, ServicesFlow.services_order_status_match_state):
