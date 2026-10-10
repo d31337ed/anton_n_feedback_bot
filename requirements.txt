@@ -16,17 +16,13 @@ logging==0.4.9.6
 magic-filter==1.0.12
 multidict==6.1.0
 propcache==0.3.0
-pyaes==1.6.1
-pyasn1==0.6.1
 pydantic==2.10.6
 pydantic_core==2.27.2
 pydantic-settings==2.7.1
 pyTelegramBotAPI==4.26.0
 redis==5.2.1
 requests==2.32.3
-rsa==4.9
 setuptools==76.0.0
-Telethon==1.39.0
 typing_extensions==4.12.2
 urllib3==2.3.0
 yarl==1.18.3

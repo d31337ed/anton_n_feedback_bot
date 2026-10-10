@@ -16,10 +16,6 @@ class Settings(BaseSettings):
     redis_port: int = 6379
     redis_db: int = 0
 
-    api_id: int
-    api_hash: str
-    chat_peer_id: int
-
     # Comma-separated user IDs. Empty = no restriction (prod default).
     allowed_user_ids: str = ""
 
