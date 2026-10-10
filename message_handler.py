@@ -40,6 +40,7 @@ async def input_handler(message: Message, state: FSMContext, bot: Bot, album: li
             return
         handler = handlers.get(message.text)
         if handler:
+            logging.info(f"Button '{message.text}' pressed by user {message.from_user.id} in state {await state.get_state()}")
             await handler(message, state)
         elif message.from_user.id != settings.bot_id:
             await message.answer(text=NO_INPUT, parse_mode="html")
