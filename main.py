@@ -14,7 +14,7 @@ from states import *
 from keyboards import *
 from literals import *
 from settings import settings
-from topic_registry import redis, get_topic_user_id
+from topic_registry import redis, get_topic_user_id, close_topic
 
 LOG_PATH = './logs/feedback_bot.log'
 
@@ -75,8 +75,7 @@ async def handle_close(message: Message, state: FSMContext):
     await state.set_state(WelcomeFlow.start_state)
     if message.message_thread_id is not None:
         logging.info(f"Closing forum topic with ID: {message.message_thread_id}")
-        await bot.close_forum_topic(chat_id=settings.chat_id,
-                                    message_thread_id=message.message_thread_id)
+        await close_topic(bot, message.message_thread_id)
         topic_user_id = await get_topic_user_id(message.message_thread_id)
         if topic_user_id is None:
             logging.warning(f"No user registered for forum topic {message.message_thread_id}, FSM state left as is")
@@ -93,8 +92,7 @@ async def handle_close(message: Message, state: FSMContext):
         try:
             user_active_topic_id = user_data["topic_id"]
             logging.info(f"Closing active forum topic with ID: {user_active_topic_id} for user {user_id}")
-            await bot.close_forum_topic(chat_id=settings.chat_id,
-                                        message_thread_id=user_active_topic_id)
+            await close_topic(bot, user_active_topic_id)
             await state.clear()
             logging.info(f"Cleared FSM state for user {user_id}")
             await bot.send_message(chat_id=user_id, reply_markup=MainMenuKeyboard,
