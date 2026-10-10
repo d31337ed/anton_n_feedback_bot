@@ -1,6 +1,9 @@
 services:
   feedback-bot:
-    image: feedback-bot-test:local
+    image: sjc.vultrcr.com/dockerregistry/anton_n_feedback_bot:${TEST_TAG:-test}
+    # Same host network as prod: Redis on 127.0.0.1 and the mini app port reachable by the host nginx.
+    networks:
+      - hostnet
     env_file:
       - .env.test.swarm
     secrets:
@@ -13,6 +16,11 @@ services:
     deploy:
       restart_policy:
         condition: any
+
+networks:
+  hostnet:
+    external: true
+    name: host
 
 secrets:
   bot_token_test:
