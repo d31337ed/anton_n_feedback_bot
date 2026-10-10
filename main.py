@@ -2,11 +2,13 @@ import ecs_logging
 import asyncio
 import sys
 import logging
+import callback_handlers
 import message_handler
+import miniapp_api
 import state_handlers
 from albums import AlbumMiddleware
 from aiogram import Bot, Dispatcher, Router
-from aiogram.types import Message
+from aiogram.types import CallbackQuery, Message
 from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
 from states import *
@@ -23,7 +25,7 @@ dp = Dispatcher()
 bot = Bot(token=settings.bot_token)
 
 
-async def access_control_middleware(handler, event: Message, data: dict):
+async def access_control_middleware(handler, event: Message | CallbackQuery, data: dict):
     allowed = settings.allowed_user_ids_set
     user = event.from_user
     if allowed and user and user.id != settings.bot_id and user.id not in allowed:
@@ -42,10 +44,13 @@ async def main() -> None:
     dp = Dispatcher(storage=storage)
     dp.message.outer_middleware(AlbumMiddleware())
     dp.message.outer_middleware(access_control_middleware)
+    dp.callback_query.outer_middleware(access_control_middleware)
     dp.include_router(router)
     dp.include_router(state_handlers.state_router)
     dp.include_router(message_handler.message_router)
+    dp.include_router(callback_handlers.callback_router)
     logging.info('Starting bot')
+    await miniapp_api.start(bot)
     await dp.start_polling(bot)
 
 @router.message(CommandStart())

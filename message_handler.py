@@ -6,6 +6,7 @@ from aiogram.types import Message
 from button_handlers import handlers
 from keyboards import *
 from settings import settings
+from hotel_requests import mark_answered
 from topic_registry import get_topic_user_id, release_topic_user
 
 message_router = Router()
@@ -37,6 +38,7 @@ async def input_handler(message: Message, state: FSMContext, bot: Bot, album: li
                                         message_ids=[m.message_id for m in album])
             else:
                 await bot.copy_message(chat_id=reply_to_chat_id, from_chat_id=settings.chat_id, message_id=message.message_id)
+            await mark_answered(bot, message.message_thread_id)
             return
         handler = handlers.get(message.text)
         if handler:
