@@ -23,7 +23,7 @@ async def forward_to_user_topic(message: Message, state: FSMContext, bot: Bot, t
     name = topic_name.format(user_name=user_name, user_id=user_id)
     data = await state.get_data()
     if not data:
-        topic_id = await create_topic(bot, user_id=user_id, name=name)
+        topic_id = await create_topic(bot, user=message.from_user, name=name)
         await state.set_data(data={"topic_id": topic_id})
         logging.info(f"Created new forum topic with ID: {topic_id} for user {user_id}")
         await message.reply(text=received_text, reply_markup=reply_markup, parse_mode="html")
@@ -37,7 +37,7 @@ async def forward_to_user_topic(message: Message, state: FSMContext, bot: Bot, t
             raise
         # The topic stored in FSM was deleted by an admin - open a new one instead of failing forever.
         old_topic_id = topic_id
-        topic_id = await create_topic(bot, user_id=user_id, name=name)
+        topic_id = await create_topic(bot, user=message.from_user, name=name)
         await state.set_data(data={"topic_id": topic_id})
         logging.warning(f"Forum topic {old_topic_id} for user {user_id} not found, created new topic {topic_id}")
         await bot.send_message(text=f"Forum topic ID={old_topic_id} for user ID={user_id} not found, "
@@ -64,7 +64,7 @@ async def process_hotel_request(message: Message, state: FSMContext, bot: Bot) -
 async def process_public_question(message: Message, state: FSMContext, bot: Bot) -> None:
     user_id = str(message.from_user.id)
     user_name = message.from_user.full_name
-    topic_id = await create_topic(bot, user_id=user_id,
+    topic_id = await create_topic(bot, user=message.from_user,
                                   name=PUBLIC_QUESTION_TOPIC.format(user_name=user_name, user_id=user_id))
     logging.info(f"Created public question forum topic for user {user_id} with topic ID: {topic_id}")
     await message.forward(chat_id=settings.chat_id, message_thread_id=topic_id)
@@ -91,7 +91,7 @@ async def process_msc_request(message: Message, state: FSMContext, bot: Bot) -> 
 async def process_public_question(message: Message, state: FSMContext, bot: Bot) -> None:
     user_id = str(message.from_user.id)
     user_name = message.from_user.full_name
-    topic_id = await create_topic(bot, user_id=user_id,
+    topic_id = await create_topic(bot, user=message.from_user,
                                   name=ISSUE_BOT_TOPIC.format(user_name=user_name, user_id=user_id))
     logging.info(f"Created bot issue forum topic for user {user_id} with topic ID: {topic_id}")
     await message.forward(chat_id=settings.chat_id, message_thread_id=topic_id)
@@ -102,7 +102,7 @@ async def process_public_question(message: Message, state: FSMContext, bot: Bot)
 async def process_public_question(message: Message, state: FSMContext, bot: Bot) -> None:
     user_id = str(message.from_user.id)
     user_name = message.from_user.full_name
-    topic_id = await create_topic(bot, user_id=user_id,
+    topic_id = await create_topic(bot, user=message.from_user,
                                   name=ISSUE_ROUTES_TOPIC.format(user_name=user_name, user_id=user_id))
     logging.info(f"Created routes issue forum topic for user {user_id} with topic ID: {topic_id}")
     await message.forward(chat_id=settings.chat_id, message_thread_id=topic_id)
@@ -113,7 +113,7 @@ async def process_public_question(message: Message, state: FSMContext, bot: Bot)
 async def process_public_question(message: Message, state: FSMContext, bot: Bot) -> None:
     user_id = str(message.from_user.id)
     user_name = message.from_user.full_name
-    topic_id = await create_topic(bot, user_id=user_id,
+    topic_id = await create_topic(bot, user=message.from_user,
                                   name=ISSUE_TYPO_TOPIC.format(user_name=user_name, user_id=user_id))
     logging.info(f"Created typo issue forum topic for user {user_id} with topic ID: {topic_id}")
     await message.forward(chat_id=settings.chat_id, message_thread_id=topic_id)
