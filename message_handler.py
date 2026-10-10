@@ -11,7 +11,7 @@ from topic_registry import get_topic_user_id
 message_router = Router()
 
 @message_router.message()
-async def input_handler(message: Message, state: FSMContext, bot: Bot) -> None:
+async def input_handler(message: Message, state: FSMContext, bot: Bot, album: list[Message] | None = None) -> None:
     try:
         if message.message_thread_id is not None and message.from_user.id != settings.bot_id:
             reply_to_chat_id = await get_topic_user_id(message.message_thread_id)
@@ -21,7 +21,11 @@ async def input_handler(message: Message, state: FSMContext, bot: Bot) -> None:
                     await bot.send_message(text=f"No user registered for topic ID={message.message_thread_id}, message not delivered",
                                            chat_id=settings.chat_id, message_thread_id=settings.error_topic_id)
                 return
-            await bot.copy_message(chat_id=reply_to_chat_id, from_chat_id=settings.chat_id, message_id=message.message_id)
+            if album:
+                await bot.copy_messages(chat_id=reply_to_chat_id, from_chat_id=settings.chat_id,
+                                        message_ids=[m.message_id for m in album])
+            else:
+                await bot.copy_message(chat_id=reply_to_chat_id, from_chat_id=settings.chat_id, message_id=message.message_id)
             return
         handler = handlers.get(message.text)
         if handler:

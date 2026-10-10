@@ -4,6 +4,7 @@ import sys
 import logging
 import message_handler
 import state_handlers
+from albums import AlbumMiddleware
 from aiogram import Bot, Dispatcher, Router
 from aiogram.fsm.storage.redis import RedisStorage
 from aiogram.fsm.storage.base import StorageKey
@@ -41,6 +42,7 @@ async def main() -> None:
     global storage, dp
     storage = RedisStorage(redis)
     dp = Dispatcher(storage=storage)
+    dp.message.outer_middleware(AlbumMiddleware())
     dp.message.outer_middleware(access_control_middleware)
     dp.include_router(router)
     dp.include_router(state_handlers.state_router)
