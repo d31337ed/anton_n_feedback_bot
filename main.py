@@ -5,8 +5,6 @@ import logging
 import message_handler
 import state_handlers
 from aiogram import Bot, Dispatcher, Router
-from aiogram.fsm.storage.redis import RedisStorage
-from aiogram.fsm.storage.base import StorageKey
 from aiogram.types import Message
 from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
@@ -14,7 +12,7 @@ from states import *
 from keyboards import *
 from literals import *
 from settings import settings
-from topic_registry import redis, get_topic_user_id, close_topic
+from topic_registry import storage as fsm_storage, close_topic, release_topic_user
 
 LOG_PATH = './logs/feedback_bot.log'
 
@@ -39,7 +37,7 @@ async def access_control_middleware(handler, event: Message, data: dict):
 
 async def main() -> None:
     global storage, dp
-    storage = RedisStorage(redis)
+    storage = fsm_storage
     dp = Dispatcher(storage=storage)
     dp.message.outer_middleware(access_control_middleware)
     dp.include_router(router)
@@ -76,17 +74,7 @@ async def handle_close(message: Message, state: FSMContext):
     if message.message_thread_id is not None:
         logging.info(f"Closing forum topic with ID: {message.message_thread_id}")
         await close_topic(bot, message.message_thread_id)
-        topic_user_id = await get_topic_user_id(message.message_thread_id)
-        if topic_user_id is None:
-            logging.warning(f"No user registered for forum topic {message.message_thread_id}, FSM state left as is")
-            return
-        topic_user_id = int(topic_user_id)
-        user_state = FSMContext(storage=dp.storage,
-                                key=StorageKey(chat_id=topic_user_id, user_id=topic_user_id, bot_id=settings.bot_id))
-        # The user may already have another active topic - only drop state bound to this one.
-        if (await user_state.get_data()).get("topic_id") == message.message_thread_id:
-            await user_state.clear()
-            logging.info(f"Cleared FSM state for user {topic_user_id}")
+        await release_topic_user(bot, message.message_thread_id)
     else:
         user_data = await state.get_data()
         try:

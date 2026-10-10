@@ -1,19 +1,30 @@
 import logging
-from aiogram import Router, Bot
+from aiogram import Router, Bot, F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
 from button_handlers import handlers
 from keyboards import *
 from settings import settings
-from topic_registry import get_topic_user_id
+from topic_registry import get_topic_user_id, release_topic_user
 
 message_router = Router()
+
+@message_router.message(F.forum_topic_closed)
+async def topic_closed_handler(message: Message, bot: Bot) -> None:
+    # Topics the bot closes itself (/close) are released by the command handler.
+    if message.from_user.id == settings.bot_id:
+        return
+    logging.info(f"Forum topic {message.message_thread_id} closed by admin {message.from_user.id}")
+    await release_topic_user(bot, message.message_thread_id)
 
 @message_router.message()
 async def input_handler(message: Message, state: FSMContext, bot: Bot) -> None:
     try:
         if message.message_thread_id is not None and message.from_user.id != settings.bot_id:
+            # Service messages can't be copied to the user.
+            if message.forum_topic_reopened or message.forum_topic_edited or message.pinned_message:
+                return
             reply_to_chat_id = await get_topic_user_id(message.message_thread_id)
             if reply_to_chat_id is None:
                 logging.warning(f"No user registered for forum topic {message.message_thread_id}")

@@ -1,13 +1,19 @@
 import logging
 
 from aiogram import Bot
-from aiogram.exceptions import TelegramBadRequest
+from aiogram.exceptions import TelegramBadRequest, TelegramForbiddenError
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.storage.base import StorageKey
+from aiogram.fsm.storage.redis import RedisStorage
 from redis.asyncio import Redis
 
+from keyboards import MainMenuKeyboard
+from literals import INQUIRY_CLOSED
 from settings import settings
 
-# Shared client: also backs the FSM storage in main.py.
+# Shared client and FSM storage: main.py hands the same storage to the dispatcher.
 redis = Redis(host=settings.redis_host, port=settings.redis_port, db=settings.redis_db)
+storage = RedisStorage(redis)
 
 
 def topic_key(topic_id: int) -> str:
@@ -38,3 +44,30 @@ async def close_topic(bot: Bot, topic_id: int) -> None:
             logging.warning(f"Forum topic {topic_id} no longer exists")
         else:
             raise
+
+
+async def show_main_menu_silently(bot: Bot, user_id: int) -> None:
+    # A reply keyboard can only arrive with a message, and clients drop it once that message is deleted,
+    # so the message stays - just without a notification sound.
+    try:
+        await bot.send_message(chat_id=user_id, text=INQUIRY_CLOSED, reply_markup=MainMenuKeyboard,
+                               parse_mode="html", disable_notification=True)
+        logging.info(f"Silently restored main menu for user {user_id}")
+    except TelegramForbiddenError:
+        logging.warning(f"User {user_id} blocked the bot, main menu not restored")
+
+
+async def release_topic_user(bot: Bot, topic_id: int) -> None:
+    # Called when an admin closes a topic: free the user from it and bring back the main menu.
+    user_id = await get_topic_user_id(topic_id)
+    if user_id is None:
+        logging.warning(f"No user registered for forum topic {topic_id}, FSM state left as is")
+        return
+    user_id = int(user_id)
+    user_state = FSMContext(storage=storage, key=StorageKey(chat_id=user_id, user_id=user_id, bot_id=settings.bot_id))
+    # The user may already have another active topic - only drop state bound to this one.
+    if (await user_state.get_data()).get("topic_id") != topic_id:
+        return
+    await user_state.clear()
+    logging.info(f"Cleared FSM state for user {user_id}")
+    await show_main_menu_silently(bot, user_id)
