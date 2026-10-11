@@ -223,9 +223,8 @@ select {
 .stepper button:disabled { opacity: 0.3; }
 .stepper output { min-width: 30px; text-align: center; font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
 
-/* The budget controls continue the toggle row above, without a separator. */
-.list > .budget { border-top: 0; justify-content: flex-end; gap: 6px; min-height: 0; padding-bottom: 12px; }
-#budget-off { white-space: nowrap; }
+.budget { display: flex; align-items: center; gap: 6px; }
+.budget input { flex: 1; min-width: 0; }
 .budget input {
   width: 76px;
   height: 40px;
@@ -268,8 +267,7 @@ select {
 .error:empty { display: none; }
 .error.inset { margin: 0 14px 10px; }
 .error.banner { margin: 0 4px; }
-.note { margin: -4px 14px 12px; font-size: 13px; color: var(--hint); text-align: right; }
-.list > .note { border-top: 0; }
+.note { margin: 6px 4px 0; font-size: 13px; color: var(--hint); }
 
 .link-button {
   border: 0;

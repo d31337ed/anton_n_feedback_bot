@@ -38,27 +38,20 @@
           <input class="input boxed" id="city" data-input="city" type="text" maxlength="200" placeholder="Например: Токио или Бали, Убуд" autocomplete="off">
           <p class="error" data-error="city"></p>
         </div>
-        <div class="row">
-          <span class="row-label" id="budget-label">Бюджет</span>
-          <div class="row-controls">
-            <span class="hint" id="budget-off">на усмотрение агента</span>
-            <label class="switch"><input type="checkbox" id="budget-on" aria-labelledby="budget-label"><span></span></label>
-          </div>
-        </div>
-        <!-- Shown only when the user sets the budget themselves. -->
-        <div class="row budget" id="budget-row">
-          <input id="budget" data-input="search.budget" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="7" placeholder="до" aria-label="Бюджет до">
-          <select id="budget-currency" aria-label="Валюта бюджета"></select>
-          <select id="budget-unit" aria-label="За ночь или за весь стей"></select>
-          <button type="button" class="info-button" data-info="local" aria-label="Что такое Local">i</button>
-        </div>
-        <p class="error inset" data-error="search.budget"></p>
-        <p class="note inset" id="budget-low" hidden>Шансы найти отель по такой цене крайне малы</p>
         <div class="item" data-accordion="search">
           <button type="button" class="row summary-row" data-accordion-toggle aria-expanded="false">
             <span class="row-label">Подбор</span><span class="row-value" id="search-value"></span><span class="chevron" aria-hidden="true"></span>
           </button>
           <div class="item-body" data-accordion-body hidden>
+            <span class="sublabel" id="budget-label">Бюджет</span>
+            <div class="budget" role="group" aria-labelledby="budget-label">
+              <input id="budget" data-input="search.budget" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="7" placeholder="до" aria-label="Бюджет до">
+              <select id="budget-currency" aria-label="Валюта бюджета"></select>
+              <select id="budget-unit" aria-label="За ночь или за весь стей"></select>
+              <button type="button" class="info-button" data-info="local" aria-label="Что такое Local">i</button>
+            </div>
+            <p class="error" data-error="search.budget"></p>
+            <p class="note" id="budget-low" hidden>Шансы найти отель по такой цене крайне малы</p>
             <label class="sublabel" for="area">Район</label>
             <input class="input boxed" id="area" data-input="search.area" type="text" maxlength="100" placeholder="Например: рядом со старым городом">
             <div class="row toggle-row">

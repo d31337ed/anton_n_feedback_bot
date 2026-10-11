@@ -125,13 +125,10 @@ function renderForm() {
 
   $("#room-value").textContent = HotelModel.roomText(state.room);
   $("#custom-room").hidden = state.room.category !== "custom";
-  $("#search-value").textContent = HotelModel.searchText(state.search);
+  $("#search-value").textContent = HotelModel.searchText(state);
   $("#free-nights").checked = state.search.freeNights;
   $("#budget-currency").value = HotelModel.budgetCurrency(state);
   $("#budget-unit").value = state.search.budgetUnit;
-  $("#budget-on").checked = state.search.budgetOn;
-  $("#budget-off").hidden = state.search.budgetOn;
-  $("#budget-row").hidden = !state.search.budgetOn;
 
   const changed = HotelModel.changed(state);
   $("#room-value").classList.toggle("changed", changed.room);
@@ -218,7 +215,7 @@ function editFromReview(key) {
   openForm();
   if (key === "dates") return openCalendar();
   if (key === "hotel" || key === "city") return focusOn(document.getElementById(key));
-  if (key === "budget") return focusOn($("#budget"));
+  if (key === "budget") { accordion.open("search"); return focusOn($("#budget")); }
   if (key === "currency") return focusOn($("#currency-chips button[aria-checked=true]"));
   if (key === "comment") { commentOpen = true; renderForm(); return focusOn($("#comment")); }
   if (key === "guests") return focusOn($('[data-step="adults"]'));
@@ -232,6 +229,7 @@ function openReview() {
   const first = Object.keys(errors)[0];
   if (first) {
     if (first === "room.customText") accordion.open("room");
+    if (first === "search.budget") accordion.open("search");
     const target = $(`[data-input="${first}"]`) || $(`[data-error="${first}"]`);
     if (target) target.scrollIntoView({ block: "center" });
     return;
@@ -366,11 +364,6 @@ $("#free-nights").addEventListener("change", (event) => {
   haptic();
   changeState(() => { state.search.freeNights = event.target.checked; });
 });
-$("#budget-on").addEventListener("change", (event) => {
-  haptic();
-  changeState(() => { state.search.budgetOn = event.target.checked; });
-  if (event.target.checked && !state.search.budget) $("#budget").focus();
-});
 $("#budget-unit").addEventListener("change", (event) => {
   haptic();
   changeState(() => { state.search.budgetUnit = event.target.value; });
@@ -382,8 +375,7 @@ $("#budget-currency").addEventListener("change", (event) => {
 $("#search-reset").addEventListener("click", () => {
   haptic();
   changeState(() => {
-    const { budgetOn, budget, budgetCurrency, budgetUnit } = state.search;
-    state.search = { ...HotelModel.defaultSearch(), budgetOn, budget, budgetCurrency, budgetUnit };
+    state.search = HotelModel.defaultSearch();
   });
 });
 $("#children-ages").addEventListener("change", (event) => {
