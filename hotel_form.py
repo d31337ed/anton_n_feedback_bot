@@ -301,7 +301,7 @@ def comments_text(request: dict) -> str | None:
 
 def rows(request: dict, full: bool = False) -> list[tuple[str, str]]:
     """(label, plain value) pairs. full=True also lists default values and each comment separately - used to diff two versions."""
-    result = [("Отель", request["hotel"]) if request["mode"] == MODE_HOTEL else ("Город", request["city"]),
+    result = [("Отель", request["hotel"]) if request["mode"] == MODE_HOTEL else ("Город или локация", request["city"]),
               ("Даты", request["dates"]["label"]),
               ("Гости", guests_text(request["adults"], request["childrenAges"]))]
     if full or request["room"] != DEFAULT_ROOM:

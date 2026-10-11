@@ -163,7 +163,7 @@ const HotelModel = (() => {
   // Review screen rows (FR-4.1) - the same as the summary the bot sends to the chat.
   function reviewRows(data) {
     const rows = [
-      data.mode === "hotel" ? { key: "hotel", label: "Отель", value: data.hotel } : { key: "city", label: "Город", value: data.city },
+      data.mode === "hotel" ? { key: "hotel", label: "Отель", value: data.hotel } : { key: "city", label: "Город или локация", value: data.city },
       { key: "dates", label: "Даты", value: data.dates.label },
       { key: "guests", label: "Гости", value: guestsText(data.adults, data.childrenAges) },
     ];

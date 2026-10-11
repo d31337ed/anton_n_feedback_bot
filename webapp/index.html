@@ -29,10 +29,43 @@
       <input class="card input" id="hotel" data-input="hotel" type="text" maxlength="200" placeholder="Название отеля" autocomplete="off">
       <p class="error" data-error="hotel"></p>
     </div>
+
+    <!-- City mode: everything that narrows the choice down to a hotel, in one block. -->
     <div class="field" data-modes="city">
-      <label class="label" for="city">Город</label>
-      <input class="card input" id="city" data-input="city" type="text" maxlength="200" placeholder="Город" autocomplete="off">
-      <p class="error" data-error="city"></p>
+      <label class="label" for="city">Город или локация</label>
+      <div class="card list block">
+        <input class="input" id="city" data-input="city" type="text" maxlength="200" placeholder="Например: Токио или Бали, Убуд" autocomplete="off">
+        <p class="error inset" data-error="city"></p>
+        <div class="row">
+          <label class="row-label" for="budget">Бюджет</label>
+          <div class="row-controls budget">
+            <span class="hint">до</span>
+            <input id="budget" data-input="search.budgetPerNight" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="7" placeholder="—" aria-describedby="budget-unit">
+            <select id="budget-currency" aria-label="Валюта бюджета"></select>
+            <button type="button" class="info-button" data-info="local" aria-label="Что такое Local">i</button>
+            <span class="hint" id="budget-unit">/ночь</span>
+          </div>
+        </div>
+        <p class="error inset" data-error="search.budgetPerNight"></p>
+        <div class="item" data-accordion="search">
+          <button type="button" class="row summary-row" data-accordion-toggle aria-expanded="false">
+            <span class="row-label">Подбор</span><span class="row-value" id="search-value"></span><span class="chevron" aria-hidden="true"></span>
+          </button>
+          <div class="item-body" data-accordion-body hidden>
+            <label class="sublabel" for="area">Район</label>
+            <input class="input boxed" id="area" data-input="search.area" type="text" maxlength="100" placeholder="Например: рядом со старым городом">
+            <div class="row toggle-row">
+              <span>С бесплатными ночами <button type="button" class="info-button" data-info="freeNights" aria-label="Что это значит">i</button></span>
+              <label class="switch"><input type="checkbox" id="free-nights" aria-label="С бесплатными ночами"><span></span></label>
+            </div>
+            <label class="sublabel" for="chains">Сеть отелей</label>
+            <input class="input boxed" id="chains" data-input="search.chains" type="text" maxlength="200" placeholder="Например: Hilton, Marriott — пусто значит любые">
+            <span class="sublabel" id="hotel-type-label">Тип отеля</span>
+            <div class="segmented" role="radiogroup" aria-labelledby="hotel-type-label" id="hotel-type-segmented"></div>
+            <button type="button" class="link-button" id="search-reset">Сбросить</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="card list" id="form-rows">
@@ -93,37 +126,6 @@
           <div class="segmented" role="radiogroup" aria-labelledby="bed-label" id="bed-segmented"></div>
         </div>
       </div>
-
-      <div class="item" data-accordion="search" data-modes="city">
-        <button type="button" class="row summary-row" data-accordion-toggle aria-expanded="false">
-          <span class="row-label">Подбор</span><span class="row-value" id="search-value"></span><span class="chevron" aria-hidden="true"></span>
-        </button>
-        <div class="item-body" data-accordion-body hidden>
-          <label class="sublabel" for="area">Район</label>
-          <input class="input boxed" id="area" data-input="search.area" type="text" maxlength="100" placeholder="Например: рядом со старым городом">
-          <div class="row toggle-row">
-            <span>С бесплатными ночами <button type="button" class="info-button" data-info="freeNights" aria-label="Что это значит">i</button></span>
-            <label class="switch"><input type="checkbox" id="free-nights" aria-label="С бесплатными ночами"><span></span></label>
-          </div>
-          <label class="sublabel" for="chains">Сеть отелей</label>
-          <input class="input boxed" id="chains" data-input="search.chains" type="text" maxlength="200" placeholder="Например: Hilton, Marriott — пусто значит любые">
-          <span class="sublabel" id="hotel-type-label">Тип отеля</span>
-          <div class="segmented" role="radiogroup" aria-labelledby="hotel-type-label" id="hotel-type-segmented"></div>
-          <button type="button" class="link-button" id="search-reset">Сбросить</button>
-        </div>
-      </div>
-
-      <div class="row" data-modes="city">
-        <label class="row-label" for="budget">Бюджет</label>
-        <div class="row-controls budget">
-          <span class="hint">до</span>
-          <input id="budget" data-input="search.budgetPerNight" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="7" placeholder="—" aria-describedby="budget-unit">
-          <select id="budget-currency" aria-label="Валюта бюджета"></select>
-          <button type="button" class="info-button" data-info="local" aria-label="Что такое Local">i</button>
-          <span class="hint" id="budget-unit">/ночь</span>
-        </div>
-      </div>
-      <p class="error inset" data-error="search.budgetPerNight" data-modes="city"></p>
 
       <div class="row currency-row">
         <span class="row-label" id="currency-label">Валюта <button type="button" class="info-button" data-info="local" aria-label="Что такое Local">i</button></span>

@@ -42,6 +42,8 @@ button { cursor: pointer; }
 .sublabel { display: block; margin: 10px 0 6px; font-size: 13px; color: var(--hint); }
 
 .card { background: var(--card); border-radius: 12px; }
+/* A card that starts with a bare input: clip it to the rounded corners. */
+.card.block { overflow: hidden; }
 
 .input {
   width: 100%;

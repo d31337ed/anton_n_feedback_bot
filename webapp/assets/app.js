@@ -28,7 +28,8 @@ let submitting = false;
 let commentOpen = false;
 let calendar = null;
 
-const accordion = new Accordion($("#form-rows"), { onToggle: () => haptic() });
+// The root is the whole form: the city block and the main rows share one open-at-a-time accordion.
+const accordion = new Accordion($("#screen-form"), { onToggle: () => haptic() });
 
 function haptic() {
   if (tg.HapticFeedback) tg.HapticFeedback.selectionChanged();
