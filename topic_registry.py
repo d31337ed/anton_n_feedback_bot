@@ -10,8 +10,8 @@ from aiogram.types import User
 from redis.asyncio import Redis
 
 from keyboards import MainMenuKeyboard
-from literals import INQUIRY_CLOSED, USER_CARD, USER_CARD_NO_USERNAME, USER_CARD_PROFILE_LINK_TEXT
 from settings import settings
+from texts import t, admin_t
 
 # Shared client and FSM storage: main.py hands the same storage to the dispatcher.
 redis = Redis(host=settings.redis_host, port=settings.redis_port, db=settings.redis_db)
@@ -24,9 +24,9 @@ def topic_key(topic_id: int) -> str:
 
 def user_card(user: User) -> str:
     profile_url = f"https://t.me/{user.username}" if user.username else f"tg://user?id={user.id}"
-    return USER_CARD.format(full_name=html.escape(user.full_name),
-                            username=f"@{user.username}" if user.username else USER_CARD_NO_USERNAME,
-                            profile_link=f'<a href="{profile_url}">{USER_CARD_PROFILE_LINK_TEXT}</a>',
+    return admin_t("card.text").format(full_name=html.escape(user.full_name),
+                            username=f"@{user.username}" if user.username else admin_t("card.no_username"),
+                            profile_link=f'<a href="{profile_url}">{admin_t("card.profile_link")}</a>',
                             user_id=user.id)
 
 
@@ -62,7 +62,7 @@ async def show_main_menu_silently(bot: Bot, user_id: int) -> None:
     # A reply keyboard can only arrive with a message, and clients drop it once that message is deleted,
     # so the message stays - just without a notification sound.
     try:
-        await bot.send_message(chat_id=user_id, text=INQUIRY_CLOSED, reply_markup=MainMenuKeyboard,
+        await bot.send_message(chat_id=user_id, text=t("common.inquiry_closed"), reply_markup=MainMenuKeyboard,
                                parse_mode="html", disable_notification=True)
         logging.info(f"Silently restored main menu for user {user_id}")
     except TelegramForbiddenError:

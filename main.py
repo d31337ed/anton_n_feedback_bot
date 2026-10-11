@@ -13,8 +13,8 @@ from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
 from states import *
 from keyboards import *
-from literals import *
 from settings import settings
+from texts import t, admin_t
 from topic_registry import storage as fsm_storage, close_topic, release_topic_user
 
 LOG_PATH = './logs/feedback_bot.log'
@@ -32,7 +32,7 @@ async def access_control_middleware(handler, event: Message | CallbackQuery, dat
         logging.warning(f"Blocked message from unauthorized user {user.id} (@{user.username})")
         await bot.send_message(chat_id=settings.chat_id,
                                message_thread_id=settings.error_topic_id,
-                               text=UNAUTHORIZED_ACCESS_ALERT.format(user_id=user.id,
+                               text=admin_t("alert.unauthorized").format(user_id=user.id,
                                                                      user_name=user.full_name,
                                                                      username=user.username or "-"))
         return
@@ -60,7 +60,7 @@ async def command_start_handler(message: Message, state: FSMContext) -> None:
         user_name = message.from_user.first_name
         await state.set_state(WelcomeFlow.start_state)
         logging.info(f"Received feedback /start from user: {user_id}, Name: {user_name}")
-        await message.answer(text=WELCOME_MESSAGE.format(user_name=user_name),
+        await message.answer(text=t("menu.welcome").format(user_name=user_name),
                              parse_mode="html",
                              reply_markup=MainMenuKeyboard)
         logging.info(f"Sent welcome message to user {user_id} with name {user_name}")
@@ -71,7 +71,7 @@ async def command_start_handler(message: Message, state: FSMContext) -> None:
                                chat_id=settings.chat_id,
                                message_thread_id=settings.error_topic_id)
         logging.info(f"Error sent to admin for user {message.from_user.id}")
-        await message.answer(text=ERROR_TEXT, parse_mode='html')
+        await message.answer(text=t("common.error"), parse_mode='html')
 
 @router.message(Command("close"))
 async def handle_close(message: Message, state: FSMContext):
@@ -91,10 +91,10 @@ async def handle_close(message: Message, state: FSMContext):
             await state.clear()
             logging.info(f"Cleared FSM state for user {user_id}")
             await bot.send_message(chat_id=user_id, reply_markup=MainMenuKeyboard,
-                                   text=INQUIRY_CLOSED, parse_mode="html", disable_notification=True)
+                                   text=t("common.inquiry_closed"), parse_mode="html", disable_notification=True)
             logging.info(f"Sent inquiry closed message to user {user_id}")
         except KeyError:
-            await message.reply(text=NO_TOPIC_TO_CLOSE, parse_mode="html", reply_markup=MainMenuKeyboard)
+            await message.reply(text=t("common.nothing_to_close"), parse_mode="html", reply_markup=MainMenuKeyboard)
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)

@@ -3,7 +3,7 @@ from aiogram.exceptions import TelegramBadRequest
 from aiogram.types import CallbackQuery
 
 from keyboards import HOTEL_RULES_CALLBACK, HOTEL_COLLAPSE_CALLBACK, HotelEntryKeyboard, HotelRulesKeyboard
-from literals import HOTEL_ENTRY_TEXT, HOTEL_RULES_TEXT
+from texts import t
 
 callback_router = Router()
 
@@ -21,9 +21,9 @@ async def edit_hotel_entry(callback: CallbackQuery, text: str, keyboard) -> None
 
 @callback_router.callback_query(F.data == HOTEL_RULES_CALLBACK)
 async def hotel_rules_callback(callback: CallbackQuery) -> None:
-    await edit_hotel_entry(callback, HOTEL_RULES_TEXT, HotelRulesKeyboard)
+    await edit_hotel_entry(callback, t("hotel.rules"), HotelRulesKeyboard)
 
 
 @callback_router.callback_query(F.data == HOTEL_COLLAPSE_CALLBACK)
 async def hotel_collapse_callback(callback: CallbackQuery) -> None:
-    await edit_hotel_entry(callback, HOTEL_ENTRY_TEXT, HotelEntryKeyboard)
+    await edit_hotel_entry(callback, t("hotel.entry"), HotelEntryKeyboard)

@@ -10,9 +10,9 @@ from aiogram.types import User
 
 import hotel_form
 from keyboards import hotel_edit_keyboard
-from literals import *
 from settings import settings
 from states import ServicesFlow
+from texts import t, admin_t
 from topic_registry import create_topic, redis, storage
 
 # A request is bound to its forum topic: one open hotel branch = one topic = one request.
@@ -92,26 +92,26 @@ async def submit(bot: Bot, user, form: dict, request_id: int | None) -> tuple[st
     if status == NEW:
         tg_user = _telegram_user(user)
         topic_id = await create_topic(bot, user=tg_user,
-                                      name=HOTEL_REQUEST_TOPIC.format(user_name=tg_user.full_name, user_id=user.id))
+                                      name=admin_t("topic.hotel").format(user_name=tg_user.full_name, user_id=user.id))
         await user_state(user.id).set_data({"topic_id": topic_id})
         logging.info(f"Created hotel request topic {topic_id} for user {user.id} from the form")
         await bot.send_message(chat_id=settings.chat_id, message_thread_id=topic_id, parse_mode="html",
-                               text=HOTEL_FORM_TOPIC_NEW.format(fields=hotel_form.format_request(form)))
+                               text=admin_t("hotel_form.new").format(fields=hotel_form.format_request(form)))
         record = {"topic_id": topic_id, "user_id": user.id, "created_at": now}
     elif record is None or "form" not in record:
         # The request was opened by a text message; the form completes it.
         await bot.send_message(chat_id=settings.chat_id, message_thread_id=topic_id, parse_mode="html",
-                               text=HOTEL_FORM_TOPIC_FILLED.format(fields=hotel_form.format_request(form)))
+                               text=admin_t("hotel_form.filled").format(fields=hotel_form.format_request(form)))
         record = {"topic_id": topic_id, "user_id": user.id, "created_at": now}
     else:
         changes = hotel_form.format_changes(record["form"], form)
         await bot.send_message(chat_id=settings.chat_id, message_thread_id=topic_id, parse_mode="html",
-                               text=HOTEL_FORM_TOPIC_EDITED.format(changes=changes) if changes
-                               else HOTEL_FORM_TOPIC_UNCHANGED)
+                               text=admin_t("hotel_form.edited").format(changes=changes) if changes
+                               else admin_t("hotel_form.unchanged"))
     updated = "summary_message_id" in record
     record.update(form=form, updated_at=now)
-    summary = HOTEL_FORM_SUMMARY.format(fields=hotel_form.format_request(form),
-                                        updated=HOTEL_FORM_SUMMARY_UPDATED if updated else "")
+    summary = t("hotel.summary.text").format(fields=hotel_form.format_request(form),
+                                        updated=t("hotel.summary.updated") if updated else "")
     keyboard = hotel_edit_keyboard(topic_id)
     if updated:
         try:
