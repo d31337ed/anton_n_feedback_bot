@@ -3,20 +3,6 @@
 const tg = window.Telegram.WebApp;
 const requestId = new URLSearchParams(location.search).get("request_id");
 
-const ROOM_TYPES = ["Стандартный", "Делюкс", "Люкс"];
-const DEFAULTS = {
-  mode: "hotel", hotel: "", city: "", price_cap: "", check_in: "", check_out: "",
-  adults: 2, children: 0, room_type: ROOM_TYPES[0], comment: "",
-};
-const MODE_LABELS = { hotel: "Конкретный отель", city: "Подбор в городе" };
-// Same order and labels as the summary the bot sends to the chat.
-const FIELD_LABELS = [
-  ["mode", "Режим"], ["hotel", "Отель"], ["city", "Город"], ["price_cap", "Потолок цены за ночь"],
-  ["check_in", "Заезд"], ["check_out", "Выезд"], ["adults", "Взрослые"], ["children", "Дети"],
-  ["room_type", "Тип номера"], ["comment", "Комментарий"],
-];
-const MODE_FIELDS = { hotel: ["hotel"], city: ["city", "price_cap"] };
-const LIMITS = { adults: [1, 20], children: [0, 20] };
 const STATUS_TEXT = {
   in_work: "Заявка уже в работе — напишите изменения в чат.",
   closed: "Заявка закрыта — начните новую через /start.",
@@ -24,92 +10,59 @@ const STATUS_TEXT = {
   unauthorized: "Не удалось подтвердить вход. Закройте форму и откройте её заново из чата с ботом.",
   network: "Не удалось связаться с сервером.",
 };
+const INFO_TEXT = {
+  freeNights: "Акции вроде Stay 3 Pay 2: одна или несколько ночей в подарок.",
+  local: "Local — валюта страны отеля, например иены в Японии или евро во Франции.",
+};
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 
-let values = { ...DEFAULTS };
-let initialValues = JSON.stringify(values);
-let errors = {};
+let config = { maxNights: 30, horizonMonths: 15, flexNights: [1, 21], adults: [1, 6], maxChildren: 6, maxChildAge: 17 };
+let state = HotelModel.defaults();
+let initialSnapshot = JSON.stringify(state);
 const touched = new Set();
 let screen = null;
 let idempotencyKey = null;
 let submitting = false;
+let commentOpen = false;
+let calendar = null;
 
-// ---------- helpers ----------
+const accordion = new Accordion($("#form-rows"), { onToggle: () => haptic() });
 
-function todayIso() {
-  const now = new Date();
-  return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+function haptic() {
+  if (tg.HapticFeedback) tg.HapticFeedback.selectionChanged();
 }
 
-function addDays(iso, days) {
-  const date = new Date(iso + "T00:00:00Z");
-  date.setUTCDate(date.getUTCDate() + days);
-  return date.toISOString().slice(0, 10);
+function getPath(object, path) {
+  return path.split(".").reduce((value, key) => value[key], object);
 }
 
-function nightsBetween(checkIn, checkOut) {
-  return Math.round((Date.parse(checkOut) - Date.parse(checkIn)) / 86400000);
+function setPath(object, path, value) {
+  const keys = path.split(".");
+  const last = keys.pop();
+  keys.reduce((value, key) => value[key], object)[last] = value;
 }
 
-function plural(number, one, few, many) {
-  const n10 = number % 10, n100 = number % 100;
-  if (n10 === 1 && n100 !== 11) return one;
-  if (n10 >= 2 && n10 <= 4 && (n100 < 12 || n100 > 14)) return few;
-  return many;
+function el(tag, attributes = {}, ...children) {
+  const element = document.createElement(tag);
+  for (const [name, value] of Object.entries(attributes)) element.setAttribute(name, value);
+  element.append(...children);
+  return element;
 }
 
-function formatDate(iso) {
-  const [year, month, day] = iso.split("-");
-  return `${day}.${month}.${year}`;
+// ---------- static controls ----------
+
+function buildChoices(container, path, options, role) {
+  container.replaceChildren(...Object.entries(options).map(([value, label]) =>
+    el("button", { type: "button", role, "data-set": path, "data-value": value, class: container.classList.contains("chips") ? "chip" : "" }, label)));
 }
 
-function activeFields() {
-  const hidden = MODE_FIELDS[values.mode === "hotel" ? "city" : "hotel"];
-  return FIELD_LABELS.map(([name]) => name).filter((name) => !hidden.includes(name));
-}
-
-// Fields of the other mode keep their values while hidden but are not submitted.
-function payload() {
-  const result = {};
-  for (const name of activeFields()) {
-    const value = typeof values[name] === "string" ? values[name].trim() : values[name];
-    if (value !== "" && value !== null && !(name === "children" && value === 0)) result[name] = value;
-  }
-  return result;
-}
-
-function formatValue(name, data) {
-  const value = data[name];
-  if (name === "mode") return MODE_LABELS[value];
-  if (name === "check_in") return formatDate(value);
-  if (name === "check_out") {
-    const nights = nightsBetween(data.check_in, value);
-    return `${formatDate(value)} (${nights} ${plural(nights, "ночь", "ночи", "ночей")})`;
-  }
-  if (name === "price_cap") return `до $${value}`;
-  return String(value);
-}
-
-// ---------- validation (the server re-checks everything) ----------
-
-function validate() {
-  const result = {};
-  const required = values.mode === "hotel" ? ["hotel"] : ["city"];
-  for (const name of required) {
-    if (!values[name].trim()) result[name] = "Обязательное поле";
-  }
-  if (values.mode === "city" && values.price_cap !== "") {
-    const price = Number(values.price_cap);
-    if (!Number.isInteger(price) || price < 1) result.price_cap = "Нужно целое число больше нуля";
-  }
-  if (!values.check_in) result.check_in = "Укажите дату заезда";
-  else if (values.check_in < todayIso()) result.check_in = "Дата заезда уже прошла";
-  if (!values.check_out) result.check_out = "Укажите дату выезда";
-  else if (values.check_in && values.check_out <= values.check_in) result.check_out = "Выезд должен быть позже заезда";
-  return result;
-}
+buildChoices($("#category-chips"), "room.category", HotelModel.CATEGORIES, "radio");
+buildChoices($("#bed-segmented"), "room.bed", HotelModel.BEDS, "radio");
+buildChoices($("#hotel-type-segmented"), "search.hotelType", HotelModel.HOTEL_TYPES, "radio");
+buildChoices($("#currency-chips"), "currency", HotelModel.CURRENCIES, "radio");
+$("#budget-currency").replaceChildren(...Object.entries(HotelModel.CURRENCIES).map(([value, label]) => el("option", { value }, label)));
 
 // ---------- rendering ----------
 
@@ -129,120 +82,162 @@ function showNotice(text, retry) {
   showScreen("notice");
 }
 
+function renderChildrenAges() {
+  const box = $("#children-ages");
+  const selects = box.querySelectorAll("select");
+  if (selects.length === state.childrenAges.length) {
+    selects.forEach((select, i) => { select.value = state.childrenAges[i] === null ? "" : String(state.childrenAges[i]); });
+    return;
+  }
+  box.replaceChildren(...state.childrenAges.map((age, i) => {
+    const options = [el("option", { value: "" }, "Возраст"), el("option", { value: "0" }, "до 1")];
+    for (let year = 1; year <= config.maxChildAge; year++) options.push(el("option", { value: String(year) }, `${year} ${Dates.plural(year, "год", "года", "лет")}`));
+    const select = el("select", { "data-child": String(i), "aria-label": `Возраст ребёнка ${i + 1}` }, ...options);
+    select.value = age === null ? "" : String(age);
+    return el("div", { class: "row" }, el("span", {}, `Ребёнок ${i + 1}`), select);
+  }));
+}
+
 function renderForm() {
-  for (const button of $$("[data-mode]")) button.setAttribute("aria-checked", String(button.dataset.mode === values.mode));
-  for (const field of $$("[data-modes]")) field.hidden = field.dataset.modes !== values.mode;
-  for (const button of $$("[data-room]")) button.setAttribute("aria-checked", String(button.dataset.room === values.room_type));
-  for (const name of ["hotel", "city", "price_cap", "check_in", "check_out", "comment"]) {
-    const input = document.getElementById(name);
-    if (input.value !== String(values[name])) input.value = values[name];
+  const city = state.mode === "city";
+  for (const button of $$("[data-set]")) button.setAttribute("aria-checked", String(String(getPath(state, button.dataset.set)) === button.dataset.value));
+  for (const node of $$("[data-modes]")) node.hidden = node.dataset.modes !== state.mode;
+  for (const input of $$("[data-input]")) {
+    const value = getPath(state, input.dataset.input);
+    if (input.value !== value) input.value = value;
   }
-  $("#check_in").min = todayIso();
-  $("#check_out").min = values.check_in ? addDays(values.check_in, 1) : todayIso();
-  for (const name of ["adults", "children"]) {
-    document.getElementById(name).value = values[name];
-    const [low, high] = LIMITS[name];
-    $(`[data-step="${name}"][data-delta="-1"]`).disabled = values[name] <= low;
-    $(`[data-step="${name}"][data-delta="1"]`).disabled = values[name] >= high;
+
+  const datesValue = $("#dates-value");
+  datesValue.textContent = state.dates ? state.dates.label : "Выбрать ›";
+  datesValue.classList.toggle("accent", !state.dates);
+
+  const kids = state.childrenAges.length;
+  const [minAdults, maxAdults] = config.adults;
+  $("#guests-inline").hidden = kids > 0;
+  $("#guests-toggle").hidden = kids === 0;
+  $("#guests-value").textContent = HotelModel.guestsText(state.adults, state.childrenAges);
+  $("[data-output=adults]").value = `${state.adults} ${Dates.plural(state.adults, "взрослый", "взрослых", "взрослых")}`;
+  $("[data-output=adults]").classList.toggle("changed", state.adults !== 2);
+  $("[data-output=adults-count]").value = state.adults;
+  $("[data-output=children]").value = kids;
+  for (const button of $$('[data-step="adults"]')) button.disabled = button.dataset.delta < 0 ? state.adults <= minAdults : state.adults >= maxAdults;
+  for (const button of $$('[data-step="children"]')) button.disabled = button.dataset.delta < 0 ? kids <= 0 : kids >= config.maxChildren;
+  $("#add-child").disabled = config.maxChildren === 0;
+  renderChildrenAges();
+
+  $("#room-value").textContent = HotelModel.roomText(state.room);
+  $("#custom-room").hidden = state.room.category !== "custom";
+  $("#search-value").textContent = HotelModel.searchText(state.search);
+  $("#free-nights").checked = state.search.freeNights;
+  $("#budget-currency").value = HotelModel.budgetCurrency(state);
+
+  const changed = HotelModel.changed(state);
+  $("#guests-value").classList.toggle("changed", changed.guests);
+  $("#room-value").classList.toggle("changed", changed.room);
+  $("#search-value").classList.toggle("changed", changed.search);
+
+  $("#comment-box").hidden = !(commentOpen || state.comment);
+  $("#comment-link").hidden = !$("#comment-box").hidden;
+
+  const errors = HotelModel.validate(state);
+  for (const node of $$("[data-error]")) {
+    const name = node.dataset.error;
+    node.textContent = touched.has(name) && errors[name] ? errors[name] : "";
   }
-  const nights = values.check_in && values.check_out ? nightsBetween(values.check_in, values.check_out) : 0;
-  $("#nights").textContent = nights > 0 ? `· ${nights} ${plural(nights, "ночь", "ночи", "ночей")}` : "";
-  errors = validate();
-  for (const element of $$("[data-error]")) {
-    const name = element.dataset.error;
-    element.textContent = touched.has(name) && errors[name] ? errors[name] : "";
-  }
+  for (const input of $$("[data-input]")) input.classList.toggle("invalid", touched.has(input.dataset.input) && Boolean(errors[input.dataset.input]));
   updateButtons();
   updateClosingConfirmation();
+  return errors;
 }
 
 function renderReview() {
-  const data = payload();
   const list = $("#review-list");
-  list.replaceChildren();
-  for (const [name, label] of FIELD_LABELS) {
-    if (!(name in data)) continue;
-    const item = document.createElement("div");
-    item.className = "review-item";
-    const text = document.createElement("div");
-    const key = document.createElement("div");
-    key.className = "review-key";
-    key.textContent = label;
-    const value = document.createElement("div");
-    value.className = "review-value";
-    value.textContent = formatValue(name, data);
-    text.append(key, value);
-    const edit = document.createElement("button");
-    edit.type = "button";
-    edit.className = "link-button";
-    edit.textContent = "Изменить";
-    edit.addEventListener("click", () => openForm(name === "mode" ? null : name));
-    item.append(text, edit);
-    list.append(item);
-  }
+  list.replaceChildren(...HotelModel.reviewRows(HotelModel.payload(state)).map((row) => {
+    const edit = el("button", { type: "button", class: "link-button" }, "Изменить");
+    edit.addEventListener("click", () => editFromReview(row.key));
+    return el("div", { class: "review-item" },
+      el("div", {}, el("div", { class: "review-key" }, row.label), el("div", { class: "review-value" }, row.value)),
+      edit);
+  }));
   $("#review-error").hidden = true;
 }
 
+function mainButton(text, active) {
+  tg.MainButton.setParams({
+    text, is_visible: true, is_active: active,
+    color: active ? tg.themeParams.button_color || "#2b6ca3" : tg.themeParams.hint_color || "#9aa5ad",
+    text_color: tg.themeParams.button_text_color || "#ffffff",
+  });
+}
+
 function updateButtons() {
-  const main = tg.MainButton;
   if (screen === "form") {
-    const ready = Object.keys(validate()).length === 0;
-    main.setParams({
-      text: "Проверить заявку",
-      is_visible: true,
-      is_active: ready,
-      color: ready ? tg.themeParams.button_color || "#2b6ca3" : tg.themeParams.hint_color || "#9aa5ad",
-      text_color: tg.themeParams.button_text_color || "#ffffff",
-    });
+    mainButton("Проверить заявку", Object.keys(HotelModel.validate(state)).length === 0);
     tg.BackButton.hide();
+  } else if (screen === "calendar") {
+    const { text, active } = calendar.mainButton();
+    mainButton(text, active);
+    tg.BackButton.show();
   } else if (screen === "review") {
-    main.setParams({
-      text: "Отправить заявку",
-      is_visible: true,
-      is_active: !submitting,
-      color: tg.themeParams.button_color || "#2b6ca3",
-      text_color: tg.themeParams.button_text_color || "#ffffff",
-    });
+    mainButton("Отправить заявку", !submitting);
     tg.BackButton.show();
   } else {
-    main.hide();
+    tg.MainButton.hide();
     tg.BackButton.hide();
   }
 }
 
 function updateClosingConfirmation() {
-  if (JSON.stringify(values) !== initialValues) tg.enableClosingConfirmation();
+  if (JSON.stringify(state) !== initialSnapshot) tg.enableClosingConfirmation();
   else tg.disableClosingConfirmation();
 }
 
 // ---------- navigation ----------
 
-function openForm(focusName) {
+function openForm() {
   showScreen("form");
   renderForm();
-  if (focusName) {
-    const target = document.getElementById(focusName) || document.querySelector(`[data-step="${focusName}"]`);
-    if (target) {
-      target.scrollIntoView({ block: "center" });
-      target.focus({ preventScroll: true });
-    }
-  }
+}
+
+function openCalendar() {
+  calendar.open();
+  showScreen("calendar");
+}
+
+function focusOn(element) {
+  if (!element) return;
+  element.scrollIntoView({ block: "center" });
+  element.focus({ preventScroll: true });
+}
+
+function editFromReview(key) {
+  openForm();
+  if (key === "dates") return openCalendar();
+  if (key === "hotel" || key === "city") return focusOn(document.getElementById(key));
+  if (key === "budget") return focusOn($("#budget"));
+  if (key === "currency") return focusOn($("#currency-chips button[aria-checked=true]"));
+  if (key === "comment") { commentOpen = true; renderForm(); return focusOn($("#comment")); }
+  if (key === "guests" && !state.childrenAges.length) return focusOn($('[data-step="adults"]'));
+  accordion.open(key);
+  $(`[data-accordion="${key}"]`).scrollIntoView({ block: "start" });
 }
 
 function openReview() {
-  for (const name of activeFields()) touched.add(name);
-  renderForm();
-  if (Object.keys(errors).length) {
-    const first = activeFields().find((name) => errors[name]);
-    document.getElementById(first)?.scrollIntoView({ block: "center" });
+  for (const name of ["hotel", "city", "dates", "room.customText", "search.budgetPerNight", "comment"]) touched.add(name);
+  const errors = renderForm();
+  const first = Object.keys(errors)[0];
+  if (first) {
+    if (first === "room.customText") accordion.open("room");
+    const target = $(`[data-input="${first}"]`) || $(`[data-error="${first}"]`);
+    if (target) target.scrollIntoView({ block: "center" });
     return;
   }
   renderReview();
   showScreen("review");
 }
 
-function setValue(name, value) {
-  values[name] = value;
+function changeState(mutate) {
+  mutate();
   // Changed data is a new submission, so it gets a new idempotency key.
   idempotencyKey = null;
   renderForm();
@@ -267,17 +262,22 @@ async function load() {
   try {
     response = await api("GET", `api/request${requestId ? `?request_id=${encodeURIComponent(requestId)}` : ""}`);
   } catch (e) {
-    showNotice(STATUS_TEXT.network, load);
-    return;
+    return showNotice(STATUS_TEXT.network, load);
   }
   const { status, data } = response;
   if (status === 401 || status === 403) return showNotice(STATUS_TEXT.unauthorized);
   if (status === 404) return showNotice(STATUS_TEXT.not_found);
   if (status !== 200) return showNotice(STATUS_TEXT.network, load);
   if (data.status === "in_work" || data.status === "closed") return showNotice(STATUS_TEXT[data.status]);
-  values = { ...DEFAULTS, ...data.fields };
-  initialValues = JSON.stringify(values);
-  openForm(null);
+  config = { ...config, ...data.config };
+  state = data.form ? HotelModel.fromRequest(data.form) : HotelModel.applyPreferences(HotelModel.defaults(), data.preferences || {});
+  initialSnapshot = JSON.stringify(state);
+  calendar = new Calendar($("#screen-calendar"), {
+    maxNights: config.maxNights, horizonMonths: config.horizonMonths, flexNights: config.flexNights,
+    onChange: updateButtons, onSelect: haptic,
+  });
+  calendar.setValue(state.dates);
+  openForm();
 }
 
 async function submit() {
@@ -286,12 +286,10 @@ async function submit() {
   idempotencyKey = idempotencyKey || crypto.randomUUID();
   tg.MainButton.showProgress(false);
   updateButtons();
-  let response;
+  let response = null;
   try {
-    response = await api("POST", "api/request", { request_id: requestId, idempotency_key: idempotencyKey, fields: payload() });
-  } catch (e) {
-    response = null;
-  }
+    response = await api("POST", "api/request", { request_id: requestId, idempotency_key: idempotencyKey, form: HotelModel.payload(state) });
+  } catch (e) { /* shown below */ }
   submitting = false;
   tg.MainButton.hideProgress();
   updateButtons();
@@ -304,12 +302,11 @@ async function submit() {
   if (response && response.status === 409 && STATUS_TEXT[code]) return showNotice(STATUS_TEXT[code]);
   if (response && (response.status === 401 || response.status === 403)) return showNotice(STATUS_TEXT.unauthorized);
   if (response && response.status === 422) {
-    // The server disagrees with client-side validation: show its messages on the form.
-    for (const name of Object.keys(response.data.fields || {})) touched.add(name);
-    openForm(null);
+    // The server disagrees with the client-side checks: show its messages on the form.
+    openForm();
     for (const [name, message] of Object.entries(response.data.fields || {})) {
-      const element = document.querySelector(`[data-error="${name}"]`);
-      if (element) element.textContent = message;
+      const node = $(`[data-error="${name}"]`) || $(`[data-error="${name.split(".")[0]}"]`);
+      if (node) node.textContent = message;
     }
     return;
   }
@@ -322,32 +319,93 @@ async function submit() {
 
 // ---------- events ----------
 
-for (const button of $$("[data-mode]")) button.addEventListener("click", () => setValue("mode", button.dataset.mode));
-for (const button of $$("[data-room]")) button.addEventListener("click", () => setValue("room_type", button.dataset.room));
-for (const button of $$("[data-step]")) {
-  button.addEventListener("click", () => {
-    const name = button.dataset.step;
-    const [low, high] = LIMITS[name];
-    setValue(name, Math.min(high, Math.max(low, values[name] + Number(button.dataset.delta))));
-  });
-}
-for (const name of ["hotel", "city", "price_cap", "check_in", "check_out", "comment"]) {
-  const input = document.getElementById(name);
-  input.addEventListener("input", () => setValue(name, input.value));
-  input.addEventListener("blur", () => { touched.add(name); renderForm(); });
-}
-// Date pickers commit on change and often never blur.
-for (const name of ["check_in", "check_out"]) {
-  document.getElementById(name).addEventListener("change", () => { touched.add(name); renderForm(); });
-}
 $("#screen-form").addEventListener("submit", (event) => event.preventDefault());
 
+$("#screen-form").addEventListener("click", (event) => {
+  const choice = event.target.closest("[data-set]");
+  if (choice) {
+    haptic();
+    changeState(() => setPath(state, choice.dataset.set, choice.dataset.value));
+    return;
+  }
+  const step = event.target.closest("[data-step]");
+  if (step && !step.disabled) {
+    haptic();
+    const delta = Number(step.dataset.delta);
+    changeState(() => {
+      if (step.dataset.step === "adults") {
+        state.adults = Math.min(config.adults[1], Math.max(config.adults[0], state.adults + delta));
+      } else if (delta > 0) {
+        state.childrenAges.push(null);
+      } else {
+        // The last child is removed; with no children the block folds back into the "+ Дети" chip.
+        state.childrenAges.pop();
+        if (!state.childrenAges.length) accordion.close();
+      }
+    });
+    return;
+  }
+  const info = event.target.closest("[data-info]");
+  if (info) {
+    const message = INFO_TEXT[info.dataset.info];
+    if (tg.showPopup) tg.showPopup({ message, buttons: [{ type: "ok" }] });
+    else window.alert(message);
+  }
+});
+
+$("#dates-row").addEventListener("click", openCalendar);
+$("#add-child").addEventListener("click", () => {
+  haptic();
+  changeState(() => state.childrenAges.push(null));
+  accordion.open("guests");
+});
+$("#comment-link").addEventListener("click", () => {
+  commentOpen = true;
+  renderForm();
+  $("#comment").focus();
+});
+$("#free-nights").addEventListener("change", (event) => {
+  haptic();
+  changeState(() => { state.search.freeNights = event.target.checked; });
+});
+$("#budget-currency").addEventListener("change", (event) => {
+  haptic();
+  changeState(() => { state.search.budgetCurrency = event.target.value; });
+});
+$("#search-reset").addEventListener("click", () => {
+  haptic();
+  changeState(() => {
+    const { budgetPerNight, budgetCurrency } = state.search;
+    state.search = { ...HotelModel.defaultSearch(), budgetPerNight, budgetCurrency };
+  });
+});
+$("#children-ages").addEventListener("change", (event) => {
+  const select = event.target.closest("[data-child]");
+  if (!select) return;
+  haptic();
+  changeState(() => { state.childrenAges[Number(select.dataset.child)] = select.value === "" ? null : Number(select.value); });
+});
+for (const input of $$("[data-input]")) {
+  input.addEventListener("input", () => changeState(() => setPath(state, input.dataset.input, input.value)));
+  input.addEventListener("blur", () => { touched.add(input.dataset.input); renderForm(); });
+}
+
 tg.MainButton.onClick(() => {
-  if (screen === "form") openReview();
-  else if (screen === "review") submit();
+  if (screen === "form") {
+    openReview();
+  } else if (screen === "calendar") {
+    const dates = calendar.confirm();
+    if (!dates) return;
+    changeState(() => { state.dates = dates; });
+    touched.add("dates");
+    openForm();
+  } else if (screen === "review") {
+    submit();
+  }
 });
 tg.BackButton.onClick(() => {
-  if (screen === "review" && !submitting) openForm(null);
+  // The calendar keeps the last confirmed dates when closed with Back (D-14).
+  if (screen === "calendar" || (screen === "review" && !submitting)) openForm();
 });
 
 tg.ready();

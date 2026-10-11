@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Заявка на спецтариф</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/style.css?v=__ASSET_VERSION__">
 </head>
 <body>
 <main>
@@ -20,72 +20,128 @@
 
   <form id="screen-form" class="screen" hidden novalidate>
     <div class="segmented" role="radiogroup" aria-label="Режим">
-      <button type="button" role="radio" data-mode="hotel">Конкретный отель</button>
-      <button type="button" role="radio" data-mode="city">Подбор в городе</button>
+      <button type="button" role="radio" data-set="mode" data-value="hotel">Конкретный отель</button>
+      <button type="button" role="radio" data-set="mode" data-value="city">Подбор в городе</button>
     </div>
 
     <div class="field" data-modes="hotel">
       <label class="label" for="hotel">Отель</label>
-      <input class="card input" id="hotel" name="hotel" type="text" maxlength="200" placeholder="Например, Conrad Tokyo" autocomplete="off">
+      <input class="card input" id="hotel" data-input="hotel" type="text" maxlength="200" placeholder="Название отеля" autocomplete="off">
       <p class="error" data-error="hotel"></p>
     </div>
-
     <div class="field" data-modes="city">
       <label class="label" for="city">Город</label>
-      <input class="card input" id="city" name="city" type="text" maxlength="200" placeholder="Например, Токио" autocomplete="off">
+      <input class="card input" id="city" data-input="city" type="text" maxlength="200" placeholder="Город" autocomplete="off">
       <p class="error" data-error="city"></p>
     </div>
 
-    <div class="field" data-modes="city">
-      <label class="label" for="price_cap">Потолок цены за ночь, USD <span class="optional">— необязательно</span></label>
-      <input class="card input" id="price_cap" name="price_cap" type="number" inputmode="numeric" min="1" step="1" placeholder="Например, 400">
-      <p class="error" data-error="price_cap"></p>
-    </div>
+    <div class="card list" id="form-rows">
+      <button type="button" class="row summary-row" id="dates-row">
+        <span class="row-label">Даты</span>
+        <span class="row-value" id="dates-value"></span>
+      </button>
+      <p class="error inset" data-error="dates"></p>
 
-    <div class="field">
-      <span class="label">Даты и гости</span>
-      <div class="card">
-        <label class="row" for="check_in"><span>Заезд</span><input id="check_in" name="check_in" type="date"></label>
-        <p class="error inset" data-error="check_in"></p>
-        <div class="separator"></div>
-        <label class="row" for="check_out"><span>Выезд <span id="nights" class="hint"></span></span><input id="check_out" name="check_out" type="date"></label>
-        <p class="error inset" data-error="check_out"></p>
-        <div class="separator"></div>
+      <div class="item" data-accordion="guests">
         <div class="row">
-          <span id="adults-label">Взрослые</span>
-          <div class="stepper" role="group" aria-labelledby="adults-label">
-            <button type="button" data-step="adults" data-delta="-1" aria-label="Меньше взрослых">−</button>
-            <output id="adults" name="adults"></output>
-            <button type="button" data-step="adults" data-delta="1" aria-label="Больше взрослых">+</button>
+          <span class="row-label" id="adults-label">Гости</span>
+          <div class="row-controls" id="guests-inline">
+            <div class="stepper" role="group" aria-labelledby="adults-label">
+              <button type="button" data-step="adults" data-delta="-1" aria-label="Меньше взрослых">−</button>
+              <output data-output="adults"></output>
+              <button type="button" data-step="adults" data-delta="1" aria-label="Больше взрослых">+</button>
+            </div>
+            <button type="button" class="chip small" id="add-child">+ Дети</button>
           </div>
+          <button type="button" class="row-summary-button" data-accordion-toggle aria-expanded="false" id="guests-toggle" hidden>
+            <span class="row-value" id="guests-value"></span><span class="chevron" aria-hidden="true"></span>
+          </button>
         </div>
-        <div class="separator"></div>
-        <div class="row">
-          <span id="children-label">Дети</span>
-          <div class="stepper" role="group" aria-labelledby="children-label">
-            <button type="button" data-step="children" data-delta="-1" aria-label="Меньше детей">−</button>
-            <output id="children" name="children"></output>
-            <button type="button" data-step="children" data-delta="1" aria-label="Больше детей">+</button>
+        <div class="item-body" data-accordion-body hidden>
+          <div class="row">
+            <span id="adults-label-2">Взрослые</span>
+            <div class="stepper" role="group" aria-labelledby="adults-label-2">
+              <button type="button" data-step="adults" data-delta="-1" aria-label="Меньше взрослых">−</button>
+              <output data-output="adults-count"></output>
+              <button type="button" data-step="adults" data-delta="1" aria-label="Больше взрослых">+</button>
+            </div>
           </div>
+          <div class="row">
+            <span id="children-label">Дети</span>
+            <div class="stepper" role="group" aria-labelledby="children-label">
+              <button type="button" data-step="children" data-delta="-1" aria-label="Меньше детей">−</button>
+              <output data-output="children"></output>
+              <button type="button" data-step="children" data-delta="1" aria-label="Больше детей">+</button>
+            </div>
+          </div>
+          <div id="children-ages"></div>
         </div>
+      </div>
+
+      <div class="item" data-accordion="room">
+        <button type="button" class="row summary-row" data-accordion-toggle aria-expanded="false">
+          <span class="row-label">Номер</span><span class="row-value" id="room-value"></span><span class="chevron" aria-hidden="true"></span>
+        </button>
+        <div class="item-body" data-accordion-body hidden>
+          <span class="sublabel" id="category-label">Категория</span>
+          <div class="chips" role="radiogroup" aria-labelledby="category-label" id="category-chips"></div>
+          <div class="field" id="custom-room" hidden>
+            <input class="input boxed" data-input="room.customText" type="text" maxlength="200" placeholder="Например: высокий этаж, балкон" aria-label="Свои предпочтения">
+            <p class="error" data-error="room.customText"></p>
+          </div>
+          <span class="sublabel" id="bed-label">Кровать</span>
+          <div class="segmented" role="radiogroup" aria-labelledby="bed-label" id="bed-segmented"></div>
+        </div>
+      </div>
+
+      <div class="item" data-accordion="search" data-modes="city">
+        <button type="button" class="row summary-row" data-accordion-toggle aria-expanded="false">
+          <span class="row-label">Подбор</span><span class="row-value" id="search-value"></span><span class="chevron" aria-hidden="true"></span>
+        </button>
+        <div class="item-body" data-accordion-body hidden>
+          <label class="sublabel" for="area">Район</label>
+          <input class="input boxed" id="area" data-input="search.area" type="text" maxlength="100" placeholder="Например: рядом со старым городом">
+          <div class="row toggle-row">
+            <span>С бесплатными ночами <button type="button" class="info-button" data-info="freeNights" aria-label="Что это значит">i</button></span>
+            <label class="switch"><input type="checkbox" id="free-nights" aria-label="С бесплатными ночами"><span></span></label>
+          </div>
+          <label class="sublabel" for="chains">Сеть отелей</label>
+          <input class="input boxed" id="chains" data-input="search.chains" type="text" maxlength="200" placeholder="Например: Hilton, Marriott — пусто значит любые">
+          <span class="sublabel" id="hotel-type-label">Тип отеля</span>
+          <div class="segmented" role="radiogroup" aria-labelledby="hotel-type-label" id="hotel-type-segmented"></div>
+          <button type="button" class="link-button" id="search-reset">Сбросить</button>
+        </div>
+      </div>
+
+      <div class="row" data-modes="city">
+        <label class="row-label" for="budget">Бюджет</label>
+        <div class="row-controls budget">
+          <span class="hint">до</span>
+          <input id="budget" data-input="search.budgetPerNight" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="7" placeholder="—" aria-describedby="budget-unit">
+          <select id="budget-currency" aria-label="Валюта бюджета"></select>
+          <button type="button" class="info-button" data-info="local" aria-label="Что такое Local">i</button>
+          <span class="hint" id="budget-unit">/ночь</span>
+        </div>
+      </div>
+      <p class="error inset" data-error="search.budgetPerNight" data-modes="city"></p>
+
+      <div class="row currency-row">
+        <span class="row-label" id="currency-label">Валюта <button type="button" class="info-button" data-info="local" aria-label="Что такое Local">i</button></span>
+        <div class="chips nowrap" role="radiogroup" aria-labelledby="currency-label" id="currency-chips"></div>
       </div>
     </div>
 
     <div class="field">
-      <span class="label" id="room-label">Тип номера</span>
-      <div class="chips" role="radiogroup" aria-labelledby="room-label">
-        <button type="button" role="radio" data-room="Стандартный">Стандартный</button>
-        <button type="button" role="radio" data-room="Делюкс">Делюкс</button>
-        <button type="button" role="radio" data-room="Люкс">Люкс</button>
+      <button type="button" class="link-button" id="comment-link">+ Комментарий</button>
+      <div id="comment-box" hidden>
+        <label class="label" for="comment">Комментарий</label>
+        <textarea class="card input" id="comment" data-input="comment" rows="3" maxlength="2000" placeholder="Например: годовщина, тихий номер"></textarea>
+        <p class="error" data-error="comment"></p>
       </div>
-    </div>
-
-    <div class="field">
-      <label class="label" for="comment">Комментарий <span class="optional">— необязательно</span></label>
-      <textarea class="card input" id="comment" name="comment" rows="3" maxlength="2000" placeholder="Например: годовщина, тихий номер"></textarea>
-      <p class="error" data-error="comment"></p>
     </div>
   </form>
+
+  <section id="screen-calendar" class="screen" hidden></section>
 
   <section id="screen-review" class="screen" hidden>
     <p class="hint intro">Так заявка придёт в чат. Если всё верно — отправляйте.</p>
@@ -93,6 +149,10 @@
     <p id="review-error" class="error banner" hidden></p>
   </section>
 </main>
-<script src="assets/app.js"></script>
+<script src="assets/dates.js?v=__ASSET_VERSION__"></script>
+<script src="assets/calendar.js?v=__ASSET_VERSION__"></script>
+<script src="assets/accordion.js?v=__ASSET_VERSION__"></script>
+<script src="assets/model.js?v=__ASSET_VERSION__"></script>
+<script src="assets/app.js?v=__ASSET_VERSION__"></script>
 </body>
 </html>
