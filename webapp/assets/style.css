@@ -215,34 +215,16 @@ select {
 
 /* ---------- calendar ---------- */
 
-.cal-ribbon {
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  margin: 0 -16px;
-  padding: 0 16px 2px;
-  scrollbar-width: none;
-  scroll-snap-type: x proximity;
-  overscroll-behavior-x: contain;
-}
-.cal-ribbon::-webkit-scrollbar { display: none; }
-/* With a mouse there is no swipe, so a thin scrollbar shows that the ribbon scrolls. */
-@media (hover: hover) and (pointer: fine) {
-  .cal-ribbon { scrollbar-width: thin; padding-bottom: 6px; }
-  .cal-ribbon::-webkit-scrollbar { display: block; height: 4px; }
-  .cal-ribbon::-webkit-scrollbar-thumb { background: var(--chip-bg); border-radius: 2px; }
-}
+.cal-months { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
 .cal-chip {
   flex: none;
-  min-width: 52px;
   min-height: 44px;
-  padding: 0 12px;
+  padding: 0 4px;
   border: 0;
   border-radius: 12px;
   background: var(--chip-bg);
   font-size: 14px;
   white-space: nowrap;
-  scroll-snap-align: center;
 }
 .cal-chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-text); }
 

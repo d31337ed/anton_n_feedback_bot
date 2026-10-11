@@ -9,7 +9,7 @@ const HotelModel = (() => {
   const CURRENCIES = { USD: "USD", EUR: "EUR", HOTEL: "Local", RUB: "RUB" };
   const CURRENCIES_SUMMARY = { USD: "USD", EUR: "EUR", HOTEL: "Валюта отеля", RUB: "RUB" };
   const HOTEL_TYPES = { any: "Любой", city: "Городской", beach: "Пляжный" };
-  const LIMITS = { place: 200, customRoom: 200, area: 100, chains: 200, comment: 2000, budget: 1000000 };
+  const LIMITS = { place: 200, customRoom: 200, area: 100, chains: 200, comment: 2000, datesComment: 500, budget: 1000000 };
 
   function defaults() {
     return {
@@ -19,6 +19,8 @@ const HotelModel = (() => {
       currency: "USD",
       search: defaultSearch(),
       comment: "",
+      // The comment written in the flexible dates view; it is not part of the dates object.
+      datesComment: "",
     };
   }
 
@@ -46,6 +48,7 @@ const HotelModel = (() => {
       };
     }
     state.comment = form.comment || "";
+    state.datesComment = form.datesComment || "";
     return state;
   }
 
@@ -88,6 +91,7 @@ const HotelModel = (() => {
         hotelType: state.search.hotelType,
       } : null,
       comment: text(state.comment),
+      datesComment: state.dates && state.dates.flexible ? text(state.datesComment) : null,
     };
   }
 
@@ -150,6 +154,14 @@ const HotelModel = (() => {
     };
   }
 
+  // Mirrors comment_text on the backend: the dates comment first, then the general one.
+  function commentText(data) {
+    const parts = [];
+    if (data.datesComment) parts.push(`По датам: ${data.datesComment}`);
+    if (data.comment) parts.push(data.comment);
+    return parts.join("\n") || null;
+  }
+
   // Review screen rows (FR-4.1) - the same as the summary the bot sends to the chat.
   function reviewRows(data) {
     const rows = [
@@ -171,12 +183,13 @@ const HotelModel = (() => {
       if (search.chains) rows.push({ key: "search", label: "Сети", value: search.chains });
       if (search.hotelType !== "any") rows.push({ key: "search", label: "Тип отеля", value: HOTEL_TYPES[search.hotelType].toLowerCase() });
     }
-    if (data.comment) rows.push({ key: "comment", label: "Комментарий", value: data.comment });
+    const comment = commentText(data);
+    if (comment) rows.push({ key: data.comment ? "comment" : "dates", label: "Комментарий", value: comment });
     return rows;
   }
 
   return {
     CATEGORIES, BEDS, CURRENCIES, HOTEL_TYPES, LIMITS, defaults, defaultSearch, fromRequest, applyPreferences,
-    budgetCurrency, payload, validate, guestsText, roomText, searchText, changed, reviewRows,
+    budgetCurrency, payload, validate, guestsText, roomText, searchText, changed, commentText, reviewRows,
   };
 })();

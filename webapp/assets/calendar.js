@@ -3,33 +3,32 @@
 // Date picker for exact dates or flexible months + nights (UI requirements, section 5).
 // It knows nothing about Telegram: the host shows mainButton() and calls confirm()/cancel().
 class Calendar {
-  constructor(root, { maxNights, horizonMonths, flexNights, onChange = () => {}, onSelect = () => {} }) {
+  constructor(root, { maxNights, horizonMonths, flexMonths, flexNights, maxComment, onChange = () => {}, onSelect = () => {} }) {
     this.root = root;
     this.maxNights = maxNights;
     this.horizonMonths = horizonMonths;
+    this.flexMonths = flexMonths;
     this.flexNights = flexNights;
+    this.maxComment = maxComment;
     this.onChange = onChange;
     // Called on every selection, e.g. for haptic feedback.
     this.onSelect = onSelect;
     this.confirmed = null;
     this.state = null;
     root.addEventListener("click", (event) => this.handleClick(event));
-    // A mouse wheel only scrolls vertically, so over the ribbon it is turned into horizontal scrolling.
-    root.addEventListener("wheel", (event) => {
-      const ribbon = event.target.closest(".cal-ribbon");
-      if (!ribbon || Math.abs(event.deltaY) <= Math.abs(event.deltaX) || ribbon.scrollWidth <= ribbon.clientWidth) return;
-      event.preventDefault();
-      ribbon.scrollLeft += event.deltaY;
-    }, { passive: false });
+    root.addEventListener("input", (event) => {
+      if (event.target.dataset.action === "comment") this.state.comment = event.target.value;
+    });
   }
 
   static defaultState() {
-    return { flexible: false, checkIn: null, checkOut: null, months: [], nightsFrom: 5, nightsTo: 7 };
+    return { flexible: false, checkIn: null, checkOut: null, months: [], nightsFrom: 5, nightsTo: 7, comment: "" };
   }
 
   // Seeds the calendar from a saved dates object (the edit form); both modes keep their own state.
-  setValue(dates) {
+  setValue(dates, comment = "") {
     const state = Calendar.defaultState();
+    state.comment = comment || "";
     if (dates && dates.flexible) {
       Object.assign(state, { flexible: true, months: [...dates.months], nightsFrom: dates.nightsFrom, nightsTo: dates.nightsTo });
     } else if (dates) {
@@ -41,8 +40,7 @@ class Calendar {
   open() {
     this.today = Dates.today();
     this.firstMonth = Dates.monthOf(this.today);
-    // The flexible ribbon offers horizonMonths months; exact dates run up to the same day horizonMonths later.
-    this.lastMonth = Dates.addMonths(this.firstMonth, this.horizonMonths - 1);
+    // Flexible dates offer flexMonths months; exact dates run up to the same day horizonMonths later.
     const lastExactMonth = Dates.addMonths(this.firstMonth, this.horizonMonths);
     const day = Math.min(Dates.parse(this.today).d, Dates.daysInMonth(lastExactMonth));
     this.lastDay = `${lastExactMonth}-${String(day).padStart(2, "0")}`;
@@ -53,12 +51,7 @@ class Calendar {
   // Called once the calendar is on screen: shows the selected month (exact) or chip (flexible).
   scrollToSelection() {
     const s = this.state;
-    if (s.flexible) {
-      window.scrollTo(0, 0);
-      const chip = this.root.querySelector('.cal-chip[aria-pressed="true"]');
-      if (chip) chip.scrollIntoView({ block: "nearest", inline: "center" });
-      return;
-    }
+    if (s.flexible) return window.scrollTo(0, 0);
     const panel = s.checkIn && this.root.querySelector(`.cal-month[data-month="${Dates.monthOf(s.checkIn)}"]`);
     if (panel) panel.scrollIntoView({ block: "start" });
     else window.scrollTo(0, 0);
@@ -69,6 +62,12 @@ class Calendar {
     if (!this.mainButton().active) return null;
     this.confirmed = JSON.parse(JSON.stringify(this.state));
     return this.value();
+  }
+
+  // The comment from the flexible view; it is not part of the dates and only goes with flexible dates.
+  comment() {
+    const s = this.confirmed;
+    return s && s.flexible ? s.comment.trim() : "";
   }
 
   value() {
@@ -156,8 +155,14 @@ class Calendar {
     if (s.flexible) {
       parts.push(this.el("button", { class: "cal-link accent", type: "button", "data-action": "flexible", "data-value": "off" }, "‹ Выбрать точные даты"));
       parts.push(this.el("h2", { class: "cal-subtitle" }, "Когда примерно?"));
-      parts.push(this.renderRibbon());
+      parts.push(this.renderMonthChips());
       parts.push(this.renderNights());
+      const comment = this.el("textarea", {
+        class: "card input", id: "dates-comment", "data-action": "comment", rows: "3", maxlength: String(this.maxComment),
+        placeholder: "Например: любые выходные, кроме праздников",
+      });
+      comment.value = s.comment;
+      parts.push(this.el("div", { class: "field" }, this.el("label", { class: "label", for: "dates-comment" }, "Комментарий"), comment));
     } else {
       // The link stays on top: the months below scroll for more than a year.
       parts.push(this.el("button", { class: "cal-link muted", type: "button", "data-action": "flexible", "data-value": "on" }, "Не знаю точных дат"));
@@ -167,28 +172,24 @@ class Calendar {
       }
       parts.push(this.el("p", { class: "cal-easter-egg" }, "Завидую вашему горизонту планирования :)"));
     }
-    // Everything is rebuilt on every render; keep where the user scrolled the ribbon.
-    const oldRibbon = this.root.querySelector(".cal-ribbon");
-    const scrollLeft = oldRibbon ? oldRibbon.scrollLeft : 0;
     this.root.replaceChildren(...parts);
-    const ribbon = this.root.querySelector(".cal-ribbon");
-    if (ribbon) ribbon.scrollLeft = scrollLeft;
   }
 
-  renderRibbon() {
+  // All flexible months fit on one screen, so there is no scrolling.
+  renderMonthChips() {
     const s = this.state;
-    const ribbon = this.el("div", { class: "cal-ribbon", role: "group", "aria-label": "Месяцы" });
-    for (let i = 0; i < this.horizonMonths; i++) {
+    const grid = this.el("div", { class: "cal-months", role: "group", "aria-label": "Месяцы" });
+    for (let i = 0; i < this.flexMonths; i++) {
       const key = Dates.addMonths(this.firstMonth, i);
       const { y, m } = Dates.parseMonth(key);
       const text = `${Dates.MONTHS_SHORT[m - 1]} ${String(y).slice(2)}`;
       const pressed = s.months.includes(key);
-      ribbon.append(this.el("button", {
+      grid.append(this.el("button", {
         class: "cal-chip", type: "button", "data-action": "month", "data-value": key,
         "aria-pressed": String(pressed), "aria-label": Dates.monthTitle(key),
       }, text));
     }
-    return ribbon;
+    return grid;
   }
 
   renderMonth(key) {

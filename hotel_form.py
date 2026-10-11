@@ -11,15 +11,17 @@ HOTEL_TYPES = {"any": "любой", "city": "городской", "beach": "пл
 
 MAX_NIGHTS = 30
 HORIZON_MONTHS = 15
+FLEX_MONTHS = 12
 FLEX_NIGHTS = (1, 21)
 ADULTS = (1, 6)
 MAX_CHILDREN, MAX_CHILD_AGE = 6, 17
 MAX_PLACE, MAX_CUSTOM_ROOM, MAX_AREA, MAX_CHAINS, MAX_COMMENT = 200, 200, 100, 200, 2000
+MAX_DATES_COMMENT = 500
 MAX_BUDGET = 1_000_000
 
 # Sent to the mini app so both sides use the same limits.
-CONFIG = {"maxNights": MAX_NIGHTS, "horizonMonths": HORIZON_MONTHS, "flexNights": list(FLEX_NIGHTS),
-          "adults": list(ADULTS), "maxChildren": MAX_CHILDREN, "maxChildAge": MAX_CHILD_AGE}
+CONFIG = {"maxNights": MAX_NIGHTS, "horizonMonths": HORIZON_MONTHS, "flexMonths": FLEX_MONTHS,
+          "flexNights": list(FLEX_NIGHTS), "maxDatesComment": MAX_DATES_COMMENT, "adults": list(ADULTS), "maxChildren": MAX_CHILDREN, "maxChildAge": MAX_CHILD_AGE}
 
 DEFAULT_ROOM = {"category": "best_rate", "customText": None, "bed": "any"}
 DEFAULT_SEARCH = {"budgetPerNight": None, "budgetCurrency": "USD", "area": None, "freeNights": False, "chains": None,
@@ -132,7 +134,7 @@ def _clean_dates(raw, errors: dict, today: date) -> dict | None:
         return None
     # The client's "today" may differ from the server's by a day either way.
     first_month = month_index(today - timedelta(days=1))
-    last_month = month_index(today + timedelta(days=1)) + HORIZON_MONTHS - 1
+    last_month = month_index(today + timedelta(days=1)) + FLEX_MONTHS - 1
     # Exact dates may go up to the same day HORIZON_MONTHS later.
     last_day = add_months(today + timedelta(days=1), HORIZON_MONTHS)
     if raw.get("flexible"):
@@ -226,6 +228,9 @@ def clean_request(raw: dict, today: date | None = None) -> dict:
     else:
         request["search"] = None
     request["comment"] = _text(raw.get("comment"), MAX_COMMENT, errors, "comment")
+    # Written next to flexible dates, kept apart from them and glued to the comment only for display.
+    flexible = bool(request["dates"] and request["dates"]["flexible"])
+    request["datesComment"] = _text(raw.get("datesComment"), MAX_DATES_COMMENT, errors, "datesComment") if flexible else None
     if errors:
         raise ValidationError(errors)
     # The label is always rebuilt here, so the chat never shows text that disagrees with the dates.
@@ -281,6 +286,16 @@ def budget_text(request: dict) -> str:
 SEARCH_ROW_DEFAULTS = {"Бюджет": "—", "Район": "—", "Бесплатные ночи": "нет", "Сети": "любые", "Тип отеля": HOTEL_TYPES["any"]}
 
 
+def comment_text(request: dict) -> str | None:
+    """All comments of the request as one text: the dates comment first, then the general one."""
+    parts = []
+    if request.get("datesComment"):
+        parts.append(f"По датам: {request['datesComment']}")
+    if request.get("comment"):
+        parts.append(request["comment"])
+    return "\n".join(parts) or None
+
+
 def rows(request: dict, full: bool = False) -> list[tuple[str, str]]:
     """(label, plain value) pairs. full=True also lists default values - used to diff two versions."""
     result = [("Отель", request["hotel"]) if request["mode"] == MODE_HOTEL else ("Город", request["city"]),
@@ -298,8 +313,9 @@ def rows(request: dict, full: bool = False) -> list[tuple[str, str]]:
                              ("Тип отеля", HOTEL_TYPES[search["hotelType"]])):
             if full or value != SEARCH_ROW_DEFAULTS[label]:
                 result.append((label, value))
-    if full or request["comment"]:
-        result.append(("Комментарий", request["comment"] or "—"))
+    comment = comment_text(request)
+    if full or comment:
+        result.append(("Комментарий", comment or "—"))
     return result
 
 

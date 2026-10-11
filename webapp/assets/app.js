@@ -18,7 +18,7 @@ const INFO_TEXT = {
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 
-let config = { maxNights: 30, horizonMonths: 15, flexNights: [1, 21], adults: [1, 6], maxChildren: 6, maxChildAge: 17 };
+let config = { maxNights: 30, horizonMonths: 15, flexMonths: 12, flexNights: [1, 21], maxDatesComment: 500, adults: [1, 6], maxChildren: 6, maxChildAge: 17 };
 let state = HotelModel.defaults();
 let initialSnapshot = JSON.stringify(state);
 const touched = new Set();
@@ -274,10 +274,11 @@ async function load() {
   state = data.form ? HotelModel.fromRequest(data.form) : HotelModel.applyPreferences(HotelModel.defaults(), data.preferences || {});
   initialSnapshot = JSON.stringify(state);
   calendar = new Calendar($("#screen-calendar"), {
-    maxNights: config.maxNights, horizonMonths: config.horizonMonths, flexNights: config.flexNights,
+    maxNights: config.maxNights, horizonMonths: config.horizonMonths, flexMonths: config.flexMonths,
+    flexNights: config.flexNights, maxComment: config.maxDatesComment,
     onChange: updateButtons, onSelect: haptic,
   });
-  calendar.setValue(state.dates);
+  calendar.setValue(state.dates, state.datesComment);
   openForm();
 }
 
@@ -397,7 +398,7 @@ tg.MainButton.onClick(() => {
   } else if (screen === "calendar") {
     const dates = calendar.confirm();
     if (!dates) return;
-    changeState(() => { state.dates = dates; });
+    changeState(() => { state.dates = dates; state.datesComment = calendar.comment(); });
     touched.add("dates");
     openForm();
   } else if (screen === "review") {
