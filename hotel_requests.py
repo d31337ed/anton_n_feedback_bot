@@ -12,7 +12,7 @@ import hotel_form
 from keyboards import hotel_edit_keyboard
 from settings import settings
 from states import ServicesFlow
-from texts import t, admin_t
+from texts import t, admin_t, lang_of
 from topic_registry import create_topic, redis, storage
 
 # A request is bound to its forum topic: one open hotel branch = one topic = one request.
@@ -110,8 +110,10 @@ async def submit(bot: Bot, user, form: dict, request_id: int | None) -> tuple[st
                                else admin_t("hotel_form.unchanged"))
     updated = "summary_message_id" in record
     record.update(form=form, updated_at=now)
-    summary = t("hotel.summary.text").format(fields=hotel_form.format_request(form),
-                                        updated=t("hotel.summary.updated") if updated else "")
+    # The summary goes to the user in their language; the topic messages above stay in the admin's.
+    lang = lang_of(user.language_code)
+    summary = t("hotel.summary.text", lang).format(fields=hotel_form.format_request(form, lang),
+                                                   updated=t("hotel.summary.updated", lang) if updated else "")
     keyboard = hotel_edit_keyboard(topic_id)
     if updated:
         try:

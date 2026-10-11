@@ -11,6 +11,7 @@ from aiohttp import web
 import hotel_form
 import hotel_requests
 from settings import settings
+from texts import lang_of
 from topic_registry import redis
 
 WEBAPP_DIR = Path(__file__).parent / "webapp"
@@ -90,7 +91,7 @@ async def submit_request(request: web.Request) -> web.Response:
         return error(400, "bad_idempotency_key")
     request_id = parse_request_id(body.get("request_id"))
     try:
-        form = hotel_form.clean_request(body.get("form") or {})
+        form = hotel_form.clean_request(body.get("form") or {}, lang=lang_of(user.language_code))
     except hotel_form.ValidationError as e:
         return error(422, "validation", fields=e.errors)
     idempotency_key = f"request:idem:{user.id}:{key}"

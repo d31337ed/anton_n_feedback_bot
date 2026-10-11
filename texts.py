@@ -27,6 +27,8 @@ def _clean(value):
         return value.removesuffix("\n")
     if isinstance(value, dict):
         return {form: _clean(text) for form, text in value.items()}
+    if isinstance(value, list):
+        return [_clean(text) for text in value]
     return value
 
 
@@ -36,7 +38,7 @@ def _load(name: str) -> dict[str, object]:
 
 
 def _fields(value) -> set[str]:
-    texts = value.values() if isinstance(value, dict) else [value]
+    texts = value.values() if isinstance(value, dict) else value if isinstance(value, list) else [value]
     return {name for text in texts for _, name, _, _ in string.Formatter().parse(text) if name}
 
 
@@ -67,6 +69,24 @@ def lang_of(language_code: str | None) -> str:
 def t(key: str, lang: str = DEFAULT_LANG, **values) -> str:
     text = CATALOGS.get(lang, CATALOGS[DEFAULT_LANG])[key]
     return text.format(**values) if values else text
+
+
+def plural_form(lang: str, number: int) -> str:
+    """CLDR plural category of an integer; the mini app gets the same from Intl.PluralRules."""
+    if lang == "ru":
+        if number % 10 == 1 and number % 100 != 11:
+            return "one"
+        if 2 <= number % 10 <= 4 and not 12 <= number % 100 <= 14:
+            return "few"
+        return "many"
+    return "one" if number == 1 else "other"
+
+
+def tn(key: str, number: int, lang: str = DEFAULT_LANG, **values) -> str:
+    """A text with plural forms, e.g. tn("request.plurals.nights", 5) -> "5 ночей"; {n} defaults to the number."""
+    forms = CATALOGS.get(lang, CATALOGS[DEFAULT_LANG])[key]
+    values.setdefault("n", number)
+    return forms.get(plural_form(lang, number), forms.get("other", "")).format(**values)
 
 
 def admin_t(key: str, **values) -> str:

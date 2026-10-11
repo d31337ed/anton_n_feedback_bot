@@ -204,3 +204,102 @@ inquiry_open = """
 ✋Сейчас уже есть обращение в работе. Дождитесь его разрешения или закройте самостоятельно командой /close
 Дополнить существующее обращение можно отправив любое сообщение боту
 """
+
+# ---------- Заявка на отель: как она выглядит в чате и на экране проверки в форме ----------
+
+# Названия строк заявки
+[request.labels]
+hotel = "Отель"
+city = "Город или локация"
+dates = "Даты"
+guests = "Гости"
+room = "Номер"
+currency = "Валюта"
+budget = "Бюджет"
+area = "Район"
+free_nights = "Бесплатные ночи"
+chains = "Сети"
+hotel_type = "Тип отеля"
+comments = "Комментарии"
+
+# Подписи комментариев из разных частей формы
+[request.comments]
+dates = "По датам"
+room = "По номеру"
+general = "В целом"
+
+[request.room_categories]
+best_rate = "Самый выгодный"
+club = "С лаунжем"
+view = "С видом"
+suite = "Сьют"
+custom = "Пользовательский"
+
+[request.beds]
+any = "любая кровать"
+king = "King"
+twin = "Twin"
+
+[request.currencies]
+USD = "USD"
+EUR = "EUR"
+HOTEL = "Валюта отеля"
+RUB = "RUB"
+
+[request.hotel_types]
+any = "любой"
+city = "городской"
+beach = "пляжный"
+
+# {amount} — сумма, {currency} — валюта, {unit} — «за ночь» или «за стей»
+[request.budget]
+none = "на усмотрение агента"
+amount = "до {amount} {currency} {unit}"
+amount_hotel_currency = "до {amount} в валюте отеля {unit}"
+per_night = "за ночь"
+per_stay = "за стей"
+
+[request.values]
+yes = "да"
+no = "нет"
+empty = "—"
+any_chains = "любые"
+# Возраст ребёнка: младше года и не указан
+child_under_one = "до 1"
+child_unknown = "?"
+
+# Формы слова для числа {n}: one — 1, 21; few — 2–4, 22; many — 5–20, 25
+[request.plurals]
+nights = { one = "{n} ночь", few = "{n} ночи", many = "{n} ночей" }
+adults = { one = "{n} взрослый", few = "{n} взрослых", many = "{n} взрослых" }
+children = { one = "{n} ребёнок", few = "{n} детей", many = "{n} детей" }
+
+[request.months]
+# В диапазоне дат: «4–8 ноя»
+genitive = ["янв", "фев", "мар", "апр", "мая", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"]
+# В гибких датах: «Янв–Фев 2027»
+short = ["Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"]
+
+# ---------- Ошибки в форме ----------
+
+[form.errors]
+required = "Обязательное поле"
+max_length = "Не больше {limit} символов"
+integer = "Нужно целое число"
+range = "От {low} до {high}"
+invalid = "Недопустимое значение"
+mode = "Выберите режим"
+adults = "Укажите число взрослых"
+children_count = "От 0 до {max} детей"
+dates = "Выберите даты"
+exact_dates = "Выберите даты заезда и выезда"
+check_in_past = "Дата заезда уже прошла"
+check_in_out_of_range = "Дата заезда вне доступного периода"
+check_out_before_check_in = "Выезд должен быть позже заезда"
+max_nights = "Не больше {max} ночей"
+check_out_out_of_range = "Дата выезда вне доступного периода"
+months_count = "Выберите один или два месяца"
+months_in_a_row = "Месяцы должны идти подряд"
+month_out_of_range = "Месяц вне доступного периода"
+nights = "Укажите число ночей"
+nights_order = "«От» не может быть больше «До»"
