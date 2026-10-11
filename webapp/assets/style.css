@@ -223,8 +223,15 @@ select {
   padding: 0 16px 2px;
   scrollbar-width: none;
   scroll-snap-type: x proximity;
+  overscroll-behavior-x: contain;
 }
 .cal-ribbon::-webkit-scrollbar { display: none; }
+/* With a mouse there is no swipe, so a thin scrollbar shows that the ribbon scrolls. */
+@media (hover: hover) and (pointer: fine) {
+  .cal-ribbon { scrollbar-width: thin; padding-bottom: 6px; }
+  .cal-ribbon::-webkit-scrollbar { display: block; height: 4px; }
+  .cal-ribbon::-webkit-scrollbar-thumb { background: var(--chip-bg); border-radius: 2px; }
+}
 .cal-chip {
   flex: none;
   min-width: 52px;

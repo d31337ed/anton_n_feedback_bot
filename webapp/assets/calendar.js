@@ -14,6 +14,13 @@ class Calendar {
     this.confirmed = null;
     this.state = null;
     root.addEventListener("click", (event) => this.handleClick(event));
+    // A mouse wheel only scrolls vertically, so over the ribbon it is turned into horizontal scrolling.
+    root.addEventListener("wheel", (event) => {
+      const ribbon = event.target.closest(".cal-ribbon");
+      if (!ribbon || Math.abs(event.deltaY) <= Math.abs(event.deltaX) || ribbon.scrollWidth <= ribbon.clientWidth) return;
+      event.preventDefault();
+      ribbon.scrollLeft += event.deltaY;
+    }, { passive: false });
   }
 
   static defaultState() {
@@ -152,7 +159,12 @@ class Calendar {
         : this.el("p", { class: "cal-easter-egg" }, "Завидую вашему горизонту планирования :)"));
       parts.push(this.el("button", { class: "cal-link muted", type: "button", "data-action": "flexible", "data-value": "on" }, "Не знаю точных дат"));
     }
+    // The ribbon is rebuilt on every render; keep where the user scrolled it.
+    const oldRibbon = this.root.querySelector(".cal-ribbon");
+    const scrollLeft = oldRibbon ? oldRibbon.scrollLeft : 0;
     this.root.replaceChildren(...parts);
+    const ribbon = this.root.querySelector(".cal-ribbon");
+    if (ribbon) ribbon.scrollLeft = scrollLeft;
   }
 
   renderRibbon() {
@@ -161,8 +173,9 @@ class Calendar {
     for (let i = 0; i < this.horizonMonths; i++) {
       const key = Dates.addMonths(this.firstMonth, i);
       const { y, m } = Dates.parseMonth(key);
-      // The year is added to the first month of each new year.
-      const text = Dates.MONTHS_SHORT[m - 1] + (m === 1 && i > 0 ? ` ${String(y).slice(2)}` : "");
+      // Flexible mode has no month panels, so every chip shows its year; otherwise only each new January does.
+      const withYear = s.flexible || (m === 1 && i > 0);
+      const text = Dates.MONTHS_SHORT[m - 1] + (withYear ? ` ${String(y).slice(2)}` : "");
       const pressed = s.flexible ? s.months.includes(key) : key === s.visibleMonth;
       ribbon.append(this.el("button", {
         class: "cal-chip", type: "button", "data-action": "month", "data-value": key,
