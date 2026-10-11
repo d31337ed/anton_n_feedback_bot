@@ -1,3 +1,4 @@
+import hashlib
 import json
 import logging
 import time
@@ -17,6 +18,9 @@ INIT_DATA_MAX_AGE = 24 * 3600
 # "pending" lives briefly so a crashed submit does not block retries; the result is kept for a day.
 IDEMPOTENCY_PENDING_TTL, IDEMPOTENCY_RESULT_TTL = 60, 24 * 3600
 BOT = web.AppKey("bot", Bot)
+# Asset URLs carry a content hash, so clients never mix a new page with cached old scripts.
+ASSET_VERSION = hashlib.sha256(b"".join(p.read_bytes() for p in sorted((WEBAPP_DIR / "assets").iterdir()))).hexdigest()[:12]
+INDEX_HTML = (WEBAPP_DIR / "index.html").read_text().replace("__ASSET_VERSION__", ASSET_VERSION)
 
 
 def error(status: int, code: str, **extra) -> web.Response:
@@ -50,8 +54,8 @@ def parse_request_id(value) -> int | None:
         raise web.HTTPBadRequest()
 
 
-async def index(request: web.Request) -> web.FileResponse:
-    return web.FileResponse(WEBAPP_DIR / "index.html", headers={"Cache-Control": "no-cache"})
+async def index(request: web.Request) -> web.Response:
+    return web.Response(text=INDEX_HTML, content_type="text/html", headers={"Cache-Control": "no-cache"})
 
 
 async def robots(request: web.Request) -> web.Response:
