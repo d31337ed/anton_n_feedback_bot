@@ -4,7 +4,7 @@
 // Validation and summary texts mirror hotel_form.py on the backend.
 const HotelModel = (() => {
   const CATEGORIES = { best_rate: "Самый выгодный", club: "С лаунжем", view: "С видом", suite: "Сьют", custom: "Свои предпочтения" };
-  const BEDS = { any: "Не важно (самое выгодное)", king: "1 (King)", twin: "2 (Twin)" };
+  const BEDS = { any: "Не важно", king: "1 (King)", twin: "2 (Twin)" };
   const BEDS_SHORT = { any: "любая кровать", king: "King", twin: "Twin" };
   const CURRENCIES = { USD: "USD", EUR: "EUR", HOTEL: "Local", RUB: "RUB" };
   const CURRENCIES_SUMMARY = { USD: "USD", EUR: "EUR", HOTEL: "Валюта отеля", RUB: "RUB" };

@@ -211,9 +211,13 @@ class Calendar {
       const day = `${key}-${String(dayNumber).padStart(2, "0")}`;
       const classes = ["cal-day"];
       if (cell % 7 > 4) classes.push("weekend");
+      if (cell % 7 === 0 || dayNumber === 1) classes.push("week-start");
+      if (cell % 7 === 6 || dayNumber === length) classes.push("week-end");
       if (day === this.today) classes.push("today");
       const isStart = day === s.checkIn, isEnd = day === s.checkOut;
       if (isStart) classes.push("range-start");
+      // The band between the two circles starts only once the range is complete.
+      if (isStart && s.checkOut) classes.push("with-range");
       if (isEnd) classes.push("range-end");
       if (s.checkIn && s.checkOut && day > s.checkIn && day < s.checkOut) classes.push("in-range");
       // Past days, days past the horizon, and days beyond the longest stay while the check-out is being picked.

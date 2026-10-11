@@ -95,7 +95,7 @@ function renderChildrenAges() {
     for (let year = 1; year <= config.maxChildAge; year++) options.push(el("option", { value: String(year) }, `${year} ${Dates.plural(year, "год", "года", "лет")}`));
     const select = el("select", { "data-child": String(i), "aria-label": `Возраст ребёнка ${i + 1}` }, ...options);
     select.value = age === null ? "" : String(age);
-    return el("div", { class: "row" }, el("span", {}, `Ребёнок ${i + 1}`), select);
+    return el("div", { class: "row" }, el("span", { class: "hint" }, `Ребёнок ${i + 1}`), select);
   }));
 }
 
@@ -114,16 +114,12 @@ function renderForm() {
 
   const kids = state.childrenAges.length;
   const [minAdults, maxAdults] = config.adults;
-  $("#guests-inline").hidden = kids > 0;
-  $("#guests-toggle").hidden = kids === 0;
-  $("#guests-value").textContent = HotelModel.guestsText(state.adults, state.childrenAges);
-  $("[data-output=adults]").value = `${state.adults} ${Dates.plural(state.adults, "взрослый", "взрослых", "взрослых")}`;
+  $("[data-output=adults]").value = state.adults;
   $("[data-output=adults]").classList.toggle("changed", state.adults !== 2);
-  $("[data-output=adults-count]").value = state.adults;
   $("[data-output=children]").value = kids;
+  $("[data-output=children]").classList.toggle("changed", kids > 0);
   for (const button of $$('[data-step="adults"]')) button.disabled = button.dataset.delta < 0 ? state.adults <= minAdults : state.adults >= maxAdults;
   for (const button of $$('[data-step="children"]')) button.disabled = button.dataset.delta < 0 ? kids <= 0 : kids >= config.maxChildren;
-  $("#add-child").disabled = config.maxChildren === 0;
   renderChildrenAges();
 
   $("#room-value").textContent = HotelModel.roomText(state.room);
@@ -133,7 +129,6 @@ function renderForm() {
   $("#budget-currency").value = HotelModel.budgetCurrency(state);
 
   const changed = HotelModel.changed(state);
-  $("#guests-value").classList.toggle("changed", changed.guests);
   $("#room-value").classList.toggle("changed", changed.room);
   $("#search-value").classList.toggle("changed", changed.search);
 
@@ -219,7 +214,7 @@ function editFromReview(key) {
   if (key === "budget") return focusOn($("#budget"));
   if (key === "currency") return focusOn($("#currency-chips button[aria-checked=true]"));
   if (key === "comment") { commentOpen = true; renderForm(); return focusOn($("#comment")); }
-  if (key === "guests" && !state.childrenAges.length) return focusOn($('[data-step="adults"]'));
+  if (key === "guests") return focusOn($('[data-step="adults"]'));
   accordion.open(key);
   $(`[data-accordion="${key}"]`).scrollIntoView({ block: "start" });
 }
@@ -341,9 +336,7 @@ $("#screen-form").addEventListener("click", (event) => {
       } else if (delta > 0) {
         state.childrenAges.push(null);
       } else {
-        // The last child is removed; with no children the block folds back into the "+ Дети" chip.
         state.childrenAges.pop();
-        if (!state.childrenAges.length) accordion.close();
       }
     });
     return;
@@ -357,11 +350,6 @@ $("#screen-form").addEventListener("click", (event) => {
 });
 
 $("#dates-row").addEventListener("click", openCalendar);
-$("#add-child").addEventListener("click", () => {
-  haptic();
-  changeState(() => state.childrenAges.push(null));
-  accordion.open("guests");
-});
 $("#comment-link").addEventListener("click", () => {
   commentOpen = true;
   renderForm();
@@ -411,6 +399,8 @@ tg.BackButton.onClick(() => {
   if (screen === "calendar" || (screen === "review" && !submitting)) openForm();
 });
 
+// Pinch zoom on iOS ignores the viewport meta in some web views.
+document.addEventListener("gesturestart", (event) => event.preventDefault());
 tg.ready();
 tg.expand();
 load();
