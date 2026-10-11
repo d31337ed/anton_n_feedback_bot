@@ -83,12 +83,12 @@ class Calendar {
   mainButton() {
     const s = this.state;
     if (s.flexible) {
-      if (!s.months.length) return { text: "Выберите месяц", active: false };
-      return { text: `Выбрать · ${Dates.nightsText(s.nightsFrom, s.nightsTo)}`, active: true };
+      if (!s.months.length) return { text: I18n.t("form.calendar.choose_month"), active: false };
+      return { text: I18n.t("form.calendar.confirm", { nights: Dates.nightsText(s.nightsFrom, s.nightsTo) }), active: true };
     }
-    if (!s.checkIn) return { text: "Выберите дату заезда", active: false };
-    if (!s.checkOut) return { text: "Выберите дату выезда", active: false };
-    return { text: `Выбрать · ${Dates.nightsText(Dates.daysBetween(s.checkIn, s.checkOut))}`, active: true };
+    if (!s.checkIn) return { text: I18n.t("form.calendar.choose_check_in"), active: false };
+    if (!s.checkOut) return { text: I18n.t("form.calendar.choose_check_out"), active: false };
+    return { text: I18n.t("form.calendar.confirm", { nights: Dates.nightsText(Dates.daysBetween(s.checkIn, s.checkOut)) }), active: true };
   }
 
   // ---------- state changes ----------
@@ -153,24 +153,24 @@ class Calendar {
     const s = this.state;
     const parts = [];
     if (s.flexible) {
-      parts.push(this.el("button", { class: "cal-link accent", type: "button", "data-action": "flexible", "data-value": "off" }, "‹ Выбрать точные даты"));
-      parts.push(this.el("h2", { class: "cal-subtitle" }, "Когда примерно?"));
+      parts.push(this.el("button", { class: "cal-link accent", type: "button", "data-action": "flexible", "data-value": "off" }, I18n.t("form.calendar.exact_link")));
+      parts.push(this.el("h2", { class: "cal-subtitle" }, I18n.t("form.calendar.flexible_title")));
       parts.push(this.renderMonthChips());
       parts.push(this.renderNights());
       const comment = this.el("textarea", {
         class: "card input", id: "dates-comment", "data-action": "comment", rows: "3", maxlength: String(this.maxComment),
-        placeholder: "Например: любые выходные, кроме праздников",
+        placeholder: I18n.t("form.calendar.comment_placeholder"),
       });
       comment.value = s.comment;
-      parts.push(this.el("div", { class: "field" }, this.el("label", { class: "label", for: "dates-comment" }, "Комментарий"), comment));
+      parts.push(this.el("div", { class: "field" }, this.el("label", { class: "label", for: "dates-comment" }, I18n.t("form.calendar.comment_label")), comment));
     } else {
       // The link stays on top: the months below scroll for more than a year.
-      parts.push(this.el("button", { class: "cal-link muted", type: "button", "data-action": "flexible", "data-value": "on" }, "Не знаю точных дат"));
+      parts.push(this.el("button", { class: "cal-link muted", type: "button", "data-action": "flexible", "data-value": "on" }, I18n.t("form.calendar.flexible_link")));
       const lastMonth = Dates.monthOf(this.lastDay);
       for (let key = this.firstMonth; Dates.monthsBetween(key, lastMonth) >= 0; key = Dates.addMonths(key, 1)) {
         parts.push(this.renderMonth(key));
       }
-      parts.push(this.el("p", { class: "cal-easter-egg" }, "Завидую вашему горизонту планирования :)"));
+      parts.push(this.el("p", { class: "cal-easter-egg" }, I18n.t("form.calendar.easter_egg")));
     }
     this.root.replaceChildren(...parts);
   }
@@ -178,11 +178,11 @@ class Calendar {
   // All flexible months fit on one screen, so there is no scrolling.
   renderMonthChips() {
     const s = this.state;
-    const grid = this.el("div", { class: "cal-months", role: "group", "aria-label": "Месяцы" });
+    const grid = this.el("div", { class: "cal-months", role: "group", "aria-label": I18n.t("form.calendar.months_label") });
     for (let i = 0; i < this.flexMonths; i++) {
       const key = Dates.addMonths(this.firstMonth, i);
       const { y, m } = Dates.parseMonth(key);
-      const text = `${Dates.MONTHS_SHORT[m - 1]} ${String(y).slice(2)}`;
+      const text = `${Dates.monthShort(m)} ${String(y).slice(2)}`;
       const pressed = s.months.includes(key);
       grid.append(this.el("button", {
         class: "cal-chip", type: "button", "data-action": "month", "data-value": key,
@@ -197,7 +197,7 @@ class Calendar {
     const panel = this.el("section", { class: "cal-month", "data-month": key });
     panel.append(this.el("h2", { class: "cal-title" }, Dates.monthTitle(key)));
     const grid = this.el("div", { class: "cal-grid", role: "group", "aria-label": Dates.monthTitle(key) });
-    Dates.WEEKDAYS_SHORT.forEach((name, i) => grid.append(this.el("span", { class: `cal-weekday${i > 4 ? " weekend" : ""}`, "aria-hidden": "true" }, name)));
+    Dates.weekdaysShort().forEach((name, i) => grid.append(this.el("span", { class: `cal-weekday${i > 4 ? " weekend" : ""}`, "aria-hidden": "true" }, name)));
     const first = `${key}-01`;
     const offset = Dates.weekday(first);
     const length = Dates.daysInMonth(key);
@@ -237,13 +237,13 @@ class Calendar {
     const stepper = (label, value, minus, plus, minusDisabled, plusDisabled) => this.el("div", { class: "cal-nights-item" },
       this.el("span", { class: "cal-nights-label" }, label),
       this.el("div", { class: "stepper" },
-        this.el("button", { type: "button", "data-action": "nights", "data-value": minus, "aria-label": `${label}: меньше`, ...(minusDisabled ? { disabled: "" } : {}) }, "−"),
+        this.el("button", { type: "button", "data-action": "nights", "data-value": minus, "aria-label": I18n.t("form.calendar.less", { label }), ...(minusDisabled ? { disabled: "" } : {}) }, "−"),
         this.el("output", {}, String(value)),
-        this.el("button", { type: "button", "data-action": "nights", "data-value": plus, "aria-label": `${label}: больше`, ...(plusDisabled ? { disabled: "" } : {}) }, "+")));
+        this.el("button", { type: "button", "data-action": "nights", "data-value": plus, "aria-label": I18n.t("form.calendar.more", { label }), ...(plusDisabled ? { disabled: "" } : {}) }, "+")));
     return this.el("div", { class: "cal-nights card" },
-      this.el("span", { class: "cal-nights-title" }, "Ночей"),
-      stepper("от", s.nightsFrom, "from-", "from+", s.nightsFrom <= low, s.nightsFrom >= high),
-      stepper("до", s.nightsTo, "to-", "to+", s.nightsTo <= low, s.nightsTo >= high));
+      this.el("span", { class: "cal-nights-title" }, I18n.t("form.calendar.nights")),
+      stepper(I18n.t("form.calendar.nights_from"), s.nightsFrom, "from-", "from+", s.nightsFrom <= low, s.nightsFrom >= high),
+      stepper(I18n.t("form.calendar.nights_to"), s.nightsTo, "to-", "to+", s.nightsTo <= low, s.nightsTo >= high));
   }
 
   el(tag, attributes, ...children) {

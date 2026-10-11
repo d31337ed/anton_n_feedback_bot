@@ -303,3 +303,168 @@ months_in_a_row = "Месяцы должны идти подряд"
 month_out_of_range = "Месяц вне доступного периода"
 nights = "Укажите число ночей"
 nights_order = "«От» не может быть больше «До»"
+custom_room = "Опишите, что важно в номере"
+budget = "Целое число больше нуля"
+
+# ---------- Форма (мини-апп) ----------
+
+[form]
+page_title = "Заявка на спецтариф"
+loading = "Загружаю заявку…"
+retry = "Попробовать ещё раз"
+title = "Спецтариф"
+
+# Экраны-заглушки и ошибки отправки
+[form.status]
+in_work = "Заявка уже в работе — напишите изменения в чат."
+closed = "Заявка закрыта — начните новую через /start."
+not_found = "Заявка не найдена — начните новую через /start."
+unauthorized = "Не удалось подтвердить вход. Закройте форму и откройте её заново из чата с ботом."
+network = "Не удалось связаться с сервером."
+sending = "Заявка ещё отправляется, подождите пару секунд и нажмите ещё раз."
+send_failed = "Не удалось отправить заявку. Данные сохранены — попробуйте ещё раз."
+
+# Кнопка Telegram внизу экрана
+[form.buttons]
+check = "Проверить заявку"
+send = "Отправить заявку"
+
+[form.modes]
+label = "Режим"
+hotel = "Конкретный отель"
+city = "Подбор в городе"
+
+[form.hotel]
+label = "Отель"
+placeholder = "Название отеля"
+
+[form.city]
+label = "Город или локация"
+placeholder = "Например: Токио или Бали, Убуд"
+
+# Блок «Подбор» в режиме «Подбор в городе»
+[form.search]
+title = "Подбор"
+# Что написано у свёрнутого «Подбора», пока ничего не выбрано
+default = "Выгодные на мой взгляд"
+budget = "Бюджет"
+budget_placeholder = "до"
+budget_label = "Бюджет до"
+budget_currency_label = "Валюта бюджета"
+budget_unit_label = "За ночь или за весь стей"
+budget_low = "Шансы найти отель по такой цене крайне малы"
+# У свёрнутого «Подбора»: «до 400 USD/ночь»
+budget_short = "до {amount} {currency}/{unit}"
+unit_short_night = "ночь"
+unit_short_stay = "стей"
+area = "Район"
+area_placeholder = "Например: рядом со старым городом"
+free_nights = "С бесплатными ночами"
+free_nights_short = "с беспл. ночами"
+chains = "Сеть отелей"
+chains_placeholder = "Например: Hilton, Marriott — пусто значит любые"
+hotel_type = "Тип отеля"
+reset = "Сбросить"
+
+[form.search.units]
+night = "за ночь"
+stay = "за стей"
+
+[form.search.hotel_types]
+any = "Любой"
+city = "Городской"
+beach = "Пляжный"
+
+[form.dates]
+label = "Даты"
+choose = "Выбрать ›"
+
+# {n} — номер ребёнка
+[form.guests]
+adults = "Взрослые"
+adults_less = "Меньше взрослых"
+adults_more = "Больше взрослых"
+children = "Дети"
+children_less = "Меньше детей"
+children_more = "Больше детей"
+child = "Ребёнок {n}"
+age = "Возраст"
+age_label = "Возраст ребёнка {n}"
+age_under_one = "до 1"
+years = { one = "{n} год", few = "{n} года", many = "{n} лет" }
+
+[form.room]
+title = "Номер"
+category = "Категория"
+custom_placeholder = "Например: высокий этаж, балкон"
+custom_label = "Свои предпочтения"
+bed = "Кровать"
+
+[form.room.categories]
+best_rate = "Самый выгодный"
+club = "С лаунжем"
+view = "С видом"
+suite = "Сьют"
+custom = "Свои предпочтения"
+
+[form.room.beds]
+any = "Не важно"
+king = "1 (King)"
+twin = "2 (Twin)"
+
+[form.currency]
+label = "Валюта"
+
+[form.currencies]
+USD = "USD"
+EUR = "EUR"
+HOTEL = "Local"
+RUB = "RUB"
+
+# Подсказки по кнопке (i)
+[form.info]
+local_label = "Что такое Local"
+local = "Local — валюта страны отеля, например иены в Японии или евро во Франции."
+free_nights_label = "Что это значит"
+free_nights = "Акции вроде Stay 3 Pay 2: одна или несколько ночей в подарок."
+
+[form.comment]
+add = "+ Комментарий"
+label = "Комментарий"
+placeholder = "Например: годовщина, тихий номер"
+
+[form.review]
+title = "Проверка"
+intro = "Так заявка придёт в чат. Если всё верно — отправляйте."
+edit = "Изменить"
+
+# Экран выбора дат
+[form.calendar]
+choose_month = "Выберите месяц"
+choose_check_in = "Выберите дату заезда"
+choose_check_out = "Выберите дату выезда"
+# {nights} — например, «4 ночи»
+confirm = "Выбрать · {nights}"
+flexible_link = "Не знаю точных дат"
+exact_link = "‹ Выбрать точные даты"
+flexible_title = "Когда примерно?"
+months_label = "Месяцы"
+nights = "Ночей"
+nights_from = "от"
+nights_to = "до"
+# {label} — «от» или «до»
+less = "{label}: меньше"
+more = "{label}: больше"
+comment_label = "Комментарий"
+comment_placeholder = "Например: любые выходные, кроме праздников"
+easter_egg = "Завидую вашему горизонту планирования :)"
+
+[form.calendar.months]
+# Заголовки месяцев: «Ноябрь 2026»
+titles = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"]
+# Для экранного диктора: «14 ноября 2026, суббота»
+genitive = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"]
+weekdays = ["понедельник", "вторник", "среда", "четверг", "пятница", "суббота", "воскресенье"]
+weekdays_short = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
+# Подпись дня для диктора: {day} {month} {year}, {weekday}
+day_label = "{day} {month} {year}, {weekday}"

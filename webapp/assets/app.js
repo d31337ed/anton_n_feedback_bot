@@ -3,20 +3,16 @@
 const tg = window.Telegram.WebApp;
 const requestId = new URLSearchParams(location.search).get("request_id");
 
-const STATUS_TEXT = {
-  in_work: "Заявка уже в работе — напишите изменения в чат.",
-  closed: "Заявка закрыта — начните новую через /start.",
-  not_found: "Заявка не найдена — начните новую через /start.",
-  unauthorized: "Не удалось подтвердить вход. Закройте форму и откройте её заново из чата с ботом.",
-  network: "Не удалось связаться с сервером.",
-};
-const INFO_TEXT = {
-  freeNights: "Акции вроде Stay 3 Pay 2: одна или несколько ночей в подарок.",
-  local: "Local — валюта страны отеля, например иены в Японии или евро во Франции.",
-};
+// Request statuses the server may answer with; each has a notice under form.status.
+const NOTICE_STATUSES = ["in_work", "closed", "not_found"];
+const statusText = (code) => I18n.t(`form.status.${code}`);
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
+
+// Texts first: everything below renders in the user's language.
+I18n.use(tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.language_code);
+I18n.apply();
 
 let config = { maxNights: 30, horizonMonths: 15, flexMonths: 12, flexNights: [1, 21], maxDatesComment: 500, adults: [1, 6], maxChildren: 6, maxChildAge: 17 };
 let state = HotelModel.defaults();
@@ -59,12 +55,12 @@ function buildChoices(container, path, options, role) {
     el("button", { type: "button", role, "data-set": path, "data-value": value, class: container.classList.contains("chips") ? "chip" : "" }, label)));
 }
 
-buildChoices($("#category-chips"), "room.category", HotelModel.CATEGORIES, "radio");
-buildChoices($("#bed-segmented"), "room.bed", HotelModel.BEDS, "radio");
-buildChoices($("#hotel-type-segmented"), "search.hotelType", HotelModel.HOTEL_TYPES, "radio");
-buildChoices($("#currency-chips"), "currency", HotelModel.CURRENCIES, "radio");
-$("#budget-unit").replaceChildren(...Object.entries(HotelModel.BUDGET_UNITS).map(([value, label]) => el("option", { value }, label)));
-$("#budget-currency").replaceChildren(...Object.entries(HotelModel.CURRENCIES).map(([value, label]) => el("option", { value }, label)));
+buildChoices($("#category-chips"), "room.category", HotelModel.choices.categories(), "radio");
+buildChoices($("#bed-segmented"), "room.bed", HotelModel.choices.beds(), "radio");
+buildChoices($("#hotel-type-segmented"), "search.hotelType", HotelModel.choices.hotelTypes(), "radio");
+buildChoices($("#currency-chips"), "currency", HotelModel.choices.currencies(), "radio");
+$("#budget-unit").replaceChildren(...Object.entries(HotelModel.choices.budgetUnits()).map(([value, label]) => el("option", { value }, label)));
+$("#budget-currency").replaceChildren(...Object.entries(HotelModel.choices.currencies()).map(([value, label]) => el("option", { value }, label)));
 
 // ---------- rendering ----------
 
@@ -92,11 +88,11 @@ function renderChildrenAges() {
     return;
   }
   box.replaceChildren(...state.childrenAges.map((age, i) => {
-    const options = [el("option", { value: "" }, "Возраст"), el("option", { value: "0" }, "до 1")];
-    for (let year = 1; year <= config.maxChildAge; year++) options.push(el("option", { value: String(year) }, `${year} ${Dates.plural(year, "год", "года", "лет")}`));
-    const select = el("select", { "data-child": String(i), "aria-label": `Возраст ребёнка ${i + 1}` }, ...options);
+    const options = [el("option", { value: "" }, I18n.t("form.guests.age")), el("option", { value: "0" }, I18n.t("form.guests.age_under_one"))];
+    for (let year = 1; year <= config.maxChildAge; year++) options.push(el("option", { value: String(year) }, I18n.tn("form.guests.years", year)));
+    const select = el("select", { "data-child": String(i), "aria-label": I18n.t("form.guests.age_label", { n: i + 1 }) }, ...options);
     select.value = age === null ? "" : String(age);
-    return el("div", { class: "row" }, el("span", { class: "hint" }, `Ребёнок ${i + 1}`), select);
+    return el("div", { class: "row" }, el("span", { class: "hint" }, I18n.t("form.guests.child", { n: i + 1 })), select);
   }));
 }
 
@@ -110,7 +106,7 @@ function renderForm() {
   }
 
   const datesValue = $("#dates-value");
-  datesValue.textContent = state.dates ? state.dates.label : "Выбрать ›";
+  datesValue.textContent = state.dates ? state.dates.label : I18n.t("form.dates.choose");
   datesValue.classList.toggle("accent", !state.dates);
 
   const kids = state.childrenAges.length;
@@ -153,7 +149,7 @@ function renderForm() {
 function renderReview() {
   const list = $("#review-list");
   list.replaceChildren(...HotelModel.reviewRows(HotelModel.payload(state)).map((row) => {
-    const edit = el("button", { type: "button", class: "link-button" }, "Изменить");
+    const edit = el("button", { type: "button", class: "link-button" }, I18n.t("form.review.edit"));
     edit.addEventListener("click", () => editFromReview(row.key));
     return el("div", { class: "review-item" },
       el("div", {}, el("div", { class: "review-key" }, row.label), el("div", { class: "review-value" }, row.value)),
@@ -186,14 +182,14 @@ function mainButton(text, active) {
 
 function updateButtons() {
   if (screen === "form") {
-    mainButton("Проверить заявку", Object.keys(HotelModel.validate(state)).length === 0);
+    mainButton(I18n.t("form.buttons.check"), Object.keys(HotelModel.validate(state)).length === 0);
     tg.BackButton.hide();
   } else if (screen === "calendar") {
     const { text, active } = calendar.mainButton();
     mainButton(text, active);
     tg.BackButton.show();
   } else if (screen === "review") {
-    mainButton("Отправить заявку", !submitting);
+    mainButton(I18n.t("form.buttons.send"), !submitting);
     tg.BackButton.show();
   } else {
     tg.MainButton.hide();
@@ -278,13 +274,13 @@ async function load() {
   try {
     response = await api("GET", `api/request${requestId ? `?request_id=${encodeURIComponent(requestId)}` : ""}`);
   } catch (e) {
-    return showNotice(STATUS_TEXT.network, load);
+    return showNotice(statusText("network"), load);
   }
   const { status, data } = response;
-  if (status === 401 || status === 403) return showNotice(STATUS_TEXT.unauthorized);
-  if (status === 404) return showNotice(STATUS_TEXT.not_found);
-  if (status !== 200) return showNotice(STATUS_TEXT.network, load);
-  if (data.status === "in_work" || data.status === "closed") return showNotice(STATUS_TEXT[data.status]);
+  if (status === 401 || status === 403) return showNotice(statusText("unauthorized"));
+  if (status === 404) return showNotice(statusText("not_found"));
+  if (status !== 200) return showNotice(statusText("network"), load);
+  if (data.status === "in_work" || data.status === "closed") return showNotice(statusText(data.status));
   config = { ...config, ...data.config };
   state = data.form ? HotelModel.fromRequest(data.form) : HotelModel.applyPreferences(HotelModel.defaults(), data.preferences || {});
   initialSnapshot = JSON.stringify(state);
@@ -316,8 +312,8 @@ async function submit() {
     return;
   }
   const code = response && response.data.error;
-  if (response && response.status === 409 && STATUS_TEXT[code]) return showNotice(STATUS_TEXT[code]);
-  if (response && (response.status === 401 || response.status === 403)) return showNotice(STATUS_TEXT.unauthorized);
+  if (response && response.status === 409 && NOTICE_STATUSES.includes(code)) return showNotice(statusText(code));
+  if (response && (response.status === 401 || response.status === 403)) return showNotice(statusText("unauthorized"));
   if (response && response.status === 422) {
     // The server disagrees with the client-side checks: show its messages on the form.
     openForm();
@@ -329,8 +325,8 @@ async function submit() {
   }
   const banner = $("#review-error");
   banner.textContent = code === "in_progress"
-    ? "Заявка ещё отправляется, подождите пару секунд и нажмите ещё раз."
-    : "Не удалось отправить заявку. Данные сохранены — попробуйте ещё раз.";
+    ? statusText("sending")
+    : statusText("send_failed");
   banner.hidden = false;
 }
 
@@ -362,7 +358,7 @@ $("#screen-form").addEventListener("click", (event) => {
   }
   const info = event.target.closest("[data-info]");
   if (info) {
-    const message = INFO_TEXT[info.dataset.info];
+    const message = I18n.t(`form.info.${info.dataset.info}`);
     if (tg.showPopup) tg.showPopup({ message, buttons: [{ type: "ok" }] });
     else window.alert(message);
   }

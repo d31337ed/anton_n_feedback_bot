@@ -4,67 +4,67 @@
 <meta charset="utf-8">
 <meta name="color-scheme" content="dark">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Заявка на спецтариф</title>
+<title data-t="form.page_title"></title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link rel="stylesheet" href="assets/style.css?v=__ASSET_VERSION__">
 </head>
 <body>
 <main>
   <section id="screen-loading" class="screen notice">
-    <p class="hint">Загружаю заявку…</p>
+    <p class="hint" data-t="form.loading"></p>
   </section>
 
   <section id="screen-notice" class="screen notice" hidden>
     <p id="notice-text"></p>
-    <button id="notice-retry" type="button" class="link-button" hidden>Попробовать ещё раз</button>
+    <button id="notice-retry" type="button" class="link-button" hidden data-t="form.retry"></button>
   </section>
 
   <form id="screen-form" class="screen" hidden novalidate>
-    <h1 class="title">Спецтариф</h1>
-    <div class="tabs" role="radiogroup" aria-label="Режим">
-      <button type="button" role="radio" data-set="mode" data-value="hotel">Конкретный отель</button>
-      <button type="button" role="radio" data-set="mode" data-value="city">Подбор в городе</button>
+    <h1 class="title" data-t="form.title"></h1>
+    <div class="tabs" role="radiogroup" data-t-label="form.modes.label">
+      <button type="button" role="radio" data-set="mode" data-value="hotel" data-t="form.modes.hotel"></button>
+      <button type="button" role="radio" data-set="mode" data-value="city" data-t="form.modes.city"></button>
     </div>
 
     <div class="field" data-modes="hotel">
-      <label class="label" for="hotel">Отель</label>
-      <input class="card input" id="hotel" data-input="hotel" type="text" maxlength="200" placeholder="Название отеля" autocomplete="off">
+      <label class="label" for="hotel" data-t="form.hotel.label"></label>
+      <input class="card input" id="hotel" data-input="hotel" type="text" maxlength="200" data-t-placeholder="form.hotel.placeholder" autocomplete="off">
       <p class="error" data-error="hotel"></p>
     </div>
 
     <!-- City mode: everything that narrows the choice down to a hotel, in one block. -->
     <div class="field" data-modes="city">
-      <label class="label" for="city">Город или локация</label>
+      <label class="label" for="city" data-t="form.city.label"></label>
       <div class="card list">
         <div class="block-field">
-          <input class="input boxed" id="city" data-input="city" type="text" maxlength="200" placeholder="Например: Токио или Бали, Убуд" autocomplete="off">
+          <input class="input boxed" id="city" data-input="city" type="text" maxlength="200" data-t-placeholder="form.city.placeholder" autocomplete="off">
           <p class="error" data-error="city"></p>
         </div>
         <div class="item" data-accordion="search">
           <button type="button" class="row summary-row" data-accordion-toggle aria-expanded="false">
-            <span class="row-label">Подбор</span><span class="row-value" id="search-value"></span><span class="chevron" aria-hidden="true"></span>
+            <span class="row-label" data-t="form.search.title"></span><span class="row-value" id="search-value"></span><span class="chevron" aria-hidden="true"></span>
           </button>
           <div class="item-body" data-accordion-body hidden>
-            <span class="sublabel" id="budget-label">Бюджет</span>
+            <span class="sublabel" id="budget-label" data-t="form.search.budget"></span>
             <div class="budget" role="group" aria-labelledby="budget-label">
-              <input id="budget" data-input="search.budget" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="7" placeholder="до" aria-label="Бюджет до">
-              <select id="budget-currency" aria-label="Валюта бюджета"></select>
-              <select id="budget-unit" aria-label="За ночь или за весь стей"></select>
-              <button type="button" class="info-button" data-info="local" aria-label="Что такое Local">i</button>
+              <input id="budget" data-input="search.budget" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="7" data-t-placeholder="form.search.budget_placeholder" data-t-label="form.search.budget_label">
+              <select id="budget-currency" data-t-label="form.search.budget_currency_label"></select>
+              <select id="budget-unit" data-t-label="form.search.budget_unit_label"></select>
+              <button type="button" class="info-button" data-info="local" data-t-label="form.info.local_label">i</button>
             </div>
             <p class="error" data-error="search.budget"></p>
-            <p class="note" id="budget-low" hidden>Шансы найти отель по такой цене крайне малы</p>
-            <label class="sublabel" for="area">Район</label>
-            <input class="input boxed" id="area" data-input="search.area" type="text" maxlength="100" placeholder="Например: рядом со старым городом">
+            <p class="note" id="budget-low" hidden data-t="form.search.budget_low"></p>
+            <label class="sublabel" for="area" data-t="form.search.area"></label>
+            <input class="input boxed" id="area" data-input="search.area" type="text" maxlength="100" data-t-placeholder="form.search.area_placeholder">
             <div class="row toggle-row">
-              <span class="with-info">С бесплатными ночами <button type="button" class="info-button" data-info="freeNights" aria-label="Что это значит">i</button></span>
-              <label class="switch"><input type="checkbox" id="free-nights" aria-label="С бесплатными ночами"><span></span></label>
+              <span class="with-info"><span data-t="form.search.free_nights"></span> <button type="button" class="info-button" data-info="free_nights" data-t-label="form.info.free_nights_label">i</button></span>
+              <label class="switch"><input type="checkbox" id="free-nights" data-t-label="form.search.free_nights"><span></span></label>
             </div>
-            <label class="sublabel" for="chains">Сеть отелей</label>
-            <input class="input boxed" id="chains" data-input="search.chains" type="text" maxlength="200" placeholder="Например: Hilton, Marriott — пусто значит любые">
-            <span class="sublabel" id="hotel-type-label">Тип отеля</span>
+            <label class="sublabel" for="chains" data-t="form.search.chains"></label>
+            <input class="input boxed" id="chains" data-input="search.chains" type="text" maxlength="200" data-t-placeholder="form.search.chains_placeholder">
+            <span class="sublabel" id="hotel-type-label" data-t="form.search.hotel_type"></span>
             <div class="segmented" role="radiogroup" aria-labelledby="hotel-type-label" id="hotel-type-segmented"></div>
-            <button type="button" class="link-button" id="search-reset">Сбросить</button>
+            <button type="button" class="link-button" id="search-reset" data-t="form.search.reset"></button>
           </div>
         </div>
       </div>
@@ -72,56 +72,56 @@
 
     <div class="card list" id="form-rows">
       <button type="button" class="row summary-row" id="dates-row">
-        <span class="row-label">Даты</span>
+        <span class="row-label" data-t="form.dates.label"></span>
         <span class="row-value" id="dates-value"></span>
       </button>
       <p class="error inset" data-error="dates"></p>
 
       <div class="row">
-        <span class="row-label" id="adults-label">Взрослые</span>
+        <span class="row-label" id="adults-label" data-t="form.guests.adults"></span>
         <div class="stepper" role="group" aria-labelledby="adults-label">
-          <button type="button" data-step="adults" data-delta="-1" aria-label="Меньше взрослых">−</button>
+          <button type="button" data-step="adults" data-delta="-1" data-t-label="form.guests.adults_less">−</button>
           <output data-output="adults"></output>
-          <button type="button" data-step="adults" data-delta="1" aria-label="Больше взрослых">+</button>
+          <button type="button" data-step="adults" data-delta="1" data-t-label="form.guests.adults_more">+</button>
         </div>
       </div>
       <div class="row">
-        <span class="row-label" id="children-label">Дети</span>
+        <span class="row-label" id="children-label" data-t="form.guests.children"></span>
         <div class="stepper" role="group" aria-labelledby="children-label">
-          <button type="button" data-step="children" data-delta="-1" aria-label="Меньше детей">−</button>
+          <button type="button" data-step="children" data-delta="-1" data-t-label="form.guests.children_less">−</button>
           <output data-output="children"></output>
-          <button type="button" data-step="children" data-delta="1" aria-label="Больше детей">+</button>
+          <button type="button" data-step="children" data-delta="1" data-t-label="form.guests.children_more">+</button>
         </div>
       </div>
       <div id="children-ages" class="ages"></div>
 
       <div class="item" data-accordion="room">
         <button type="button" class="row summary-row" data-accordion-toggle aria-expanded="false">
-          <span class="row-label">Номер</span><span class="row-value" id="room-value"></span><span class="chevron" aria-hidden="true"></span>
+          <span class="row-label" data-t="form.room.title"></span><span class="row-value" id="room-value"></span><span class="chevron" aria-hidden="true"></span>
         </button>
         <div class="item-body" data-accordion-body hidden>
-          <span class="sublabel" id="category-label">Категория</span>
+          <span class="sublabel" id="category-label" data-t="form.room.category"></span>
           <div class="chips" role="radiogroup" aria-labelledby="category-label" id="category-chips"></div>
           <div class="field" id="custom-room" hidden>
-            <input class="input boxed" data-input="room.customText" type="text" maxlength="200" placeholder="Например: высокий этаж, балкон" aria-label="Свои предпочтения">
+            <input class="input boxed" data-input="room.customText" type="text" maxlength="200" data-t-placeholder="form.room.custom_placeholder" data-t-label="form.room.custom_label">
             <p class="error" data-error="room.customText"></p>
           </div>
-          <span class="sublabel" id="bed-label">Кровать</span>
+          <span class="sublabel" id="bed-label" data-t="form.room.bed"></span>
           <div class="segmented" role="radiogroup" aria-labelledby="bed-label" id="bed-segmented"></div>
         </div>
       </div>
 
       <div class="row currency-row">
-        <span class="row-label with-info" id="currency-label">Валюта <button type="button" class="info-button" data-info="local" aria-label="Что такое Local">i</button></span>
+        <span class="row-label with-info" id="currency-label"><span data-t="form.currency.label"></span> <button type="button" class="info-button" data-info="local" data-t-label="form.info.local_label">i</button></span>
         <div class="chips nowrap" role="radiogroup" aria-labelledby="currency-label" id="currency-chips"></div>
       </div>
     </div>
 
     <div class="field">
-      <button type="button" class="link-button" id="comment-link">+ Комментарий</button>
+      <button type="button" class="link-button" id="comment-link" data-t="form.comment.add"></button>
       <div id="comment-box" hidden>
-        <label class="label" for="comment">Комментарий</label>
-        <textarea class="card input" id="comment" data-input="comment" rows="3" maxlength="2000" placeholder="Например: годовщина, тихий номер"></textarea>
+        <label class="label" for="comment" data-t="form.comment.label"></label>
+        <textarea class="card input" id="comment" data-input="comment" rows="3" maxlength="2000" data-t-placeholder="form.comment.placeholder"></textarea>
         <p class="error" data-error="comment"></p>
       </div>
     </div>
@@ -130,12 +130,14 @@
   <section id="screen-calendar" class="screen" hidden></section>
 
   <section id="screen-review" class="screen" hidden>
-    <h1 class="title">Проверка</h1>
-    <p class="hint intro">Так заявка придёт в чат. Если всё верно — отправляйте.</p>
+    <h1 class="title" data-t="form.review.title"></h1>
+    <p class="hint intro" data-t="form.review.intro"></p>
     <div id="review-list" class="card"></div>
     <p id="review-error" class="error banner" hidden></p>
   </section>
 </main>
+<script>window.LOCALES = __LOCALES__; window.DEFAULT_LANG = "__DEFAULT_LANG__";</script>
+<script src="assets/i18n.js?v=__ASSET_VERSION__"></script>
 <script src="assets/dates.js?v=__ASSET_VERSION__"></script>
 <script src="assets/calendar.js?v=__ASSET_VERSION__"></script>
 <script src="assets/accordion.js?v=__ASSET_VERSION__"></script>
