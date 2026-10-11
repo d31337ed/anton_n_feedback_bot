@@ -24,7 +24,7 @@ class Calendar {
   }
 
   static defaultState() {
-    return { flexible: false, visibleMonth: null, checkIn: null, checkOut: null, months: [], nightsFrom: 5, nightsTo: 7 };
+    return { flexible: false, checkIn: null, checkOut: null, months: [], nightsFrom: 5, nightsTo: 7 };
   }
 
   // Seeds the calendar from a saved dates object (the edit form); both modes keep their own state.
@@ -41,12 +41,27 @@ class Calendar {
   open() {
     this.today = Dates.today();
     this.firstMonth = Dates.monthOf(this.today);
+    // The flexible ribbon offers horizonMonths months; exact dates run up to the same day horizonMonths later.
     this.lastMonth = Dates.addMonths(this.firstMonth, this.horizonMonths - 1);
+    const lastExactMonth = Dates.addMonths(this.firstMonth, this.horizonMonths);
+    const day = Math.min(Dates.parse(this.today).d, Dates.daysInMonth(lastExactMonth));
+    this.lastDay = `${lastExactMonth}-${String(day).padStart(2, "0")}`;
     this.state = JSON.parse(JSON.stringify(this.confirmed || Calendar.defaultState()));
-    const anchor = this.state.flexible ? this.state.months[0] : this.state.checkIn && Dates.monthOf(this.state.checkIn);
-    this.state.visibleMonth = this.clampMonth(anchor || this.firstMonth);
     this.render();
-    this.scrollRibbon();
+  }
+
+  // Called once the calendar is on screen: shows the selected month (exact) or chip (flexible).
+  scrollToSelection() {
+    const s = this.state;
+    if (s.flexible) {
+      window.scrollTo(0, 0);
+      const chip = this.root.querySelector('.cal-chip[aria-pressed="true"]');
+      if (chip) chip.scrollIntoView({ block: "nearest", inline: "center" });
+      return;
+    }
+    const panel = s.checkIn && this.root.querySelector(`.cal-month[data-month="${Dates.monthOf(s.checkIn)}"]`);
+    if (panel) panel.scrollIntoView({ block: "start" });
+    else window.scrollTo(0, 0);
   }
 
   // Keeps the calendar's state; the host switches back to the form.
@@ -77,12 +92,6 @@ class Calendar {
     return { text: `Выбрать · ${Dates.nightsText(Dates.daysBetween(s.checkIn, s.checkOut))}`, active: true };
   }
 
-  clampMonth(key) {
-    if (Dates.monthsBetween(this.firstMonth, key) < 0) return this.firstMonth;
-    if (Dates.monthsBetween(key, this.lastMonth) < 0) return this.lastMonth;
-    return key;
-  }
-
   // ---------- state changes ----------
 
   handleClick(event) {
@@ -91,8 +100,7 @@ class Calendar {
     const { action, value } = button.dataset;
     const s = this.state;
     if (action === "month") {
-      if (s.flexible) this.toggleFlexibleMonth(value);
-      else s.visibleMonth = value;
+      this.toggleFlexibleMonth(value);
     } else if (action === "day") {
       this.pickDay(value);
     } else if (action === "flexible") {
@@ -104,7 +112,7 @@ class Calendar {
     }
     this.onSelect();
     this.render();
-    if (action === "flexible") this.scrollRibbon();
+    if (action === "flexible") this.scrollToSelection();
     this.onChange();
   }
 
@@ -151,15 +159,15 @@ class Calendar {
       parts.push(this.renderRibbon());
       parts.push(this.renderNights());
     } else {
-      parts.push(this.renderRibbon());
-      parts.push(this.renderMonth(s.visibleMonth));
-      const next = Dates.addMonths(s.visibleMonth, 1);
-      parts.push(Dates.monthsBetween(next, this.lastMonth) >= 0
-        ? this.renderMonth(next)
-        : this.el("p", { class: "cal-easter-egg" }, "Завидую вашему горизонту планирования :)"));
+      // The link stays on top: the months below scroll for more than a year.
       parts.push(this.el("button", { class: "cal-link muted", type: "button", "data-action": "flexible", "data-value": "on" }, "Не знаю точных дат"));
+      const lastMonth = Dates.monthOf(this.lastDay);
+      for (let key = this.firstMonth; Dates.monthsBetween(key, lastMonth) >= 0; key = Dates.addMonths(key, 1)) {
+        parts.push(this.renderMonth(key));
+      }
+      parts.push(this.el("p", { class: "cal-easter-egg" }, "Завидую вашему горизонту планирования :)"));
     }
-    // The ribbon is rebuilt on every render; keep where the user scrolled it.
+    // Everything is rebuilt on every render; keep where the user scrolled the ribbon.
     const oldRibbon = this.root.querySelector(".cal-ribbon");
     const scrollLeft = oldRibbon ? oldRibbon.scrollLeft : 0;
     this.root.replaceChildren(...parts);
@@ -173,10 +181,8 @@ class Calendar {
     for (let i = 0; i < this.horizonMonths; i++) {
       const key = Dates.addMonths(this.firstMonth, i);
       const { y, m } = Dates.parseMonth(key);
-      // Flexible mode has no month panels, so every chip shows its year; otherwise only each new January does.
-      const withYear = s.flexible || (m === 1 && i > 0);
-      const text = Dates.MONTHS_SHORT[m - 1] + (withYear ? ` ${String(y).slice(2)}` : "");
-      const pressed = s.flexible ? s.months.includes(key) : key === s.visibleMonth;
+      const text = `${Dates.MONTHS_SHORT[m - 1]} ${String(y).slice(2)}`;
+      const pressed = s.months.includes(key);
       ribbon.append(this.el("button", {
         class: "cal-chip", type: "button", "data-action": "month", "data-value": key,
         "aria-pressed": String(pressed), "aria-label": Dates.monthTitle(key),
@@ -187,7 +193,7 @@ class Calendar {
 
   renderMonth(key) {
     const s = this.state;
-    const panel = this.el("section", { class: "cal-month" });
+    const panel = this.el("section", { class: "cal-month", "data-month": key });
     panel.append(this.el("h2", { class: "cal-title" }, Dates.monthTitle(key)));
     const grid = this.el("div", { class: "cal-grid", role: "group", "aria-label": Dates.monthTitle(key) });
     Dates.WEEKDAYS_SHORT.forEach((name, i) => grid.append(this.el("span", { class: `cal-weekday${i > 4 ? " weekend" : ""}`, "aria-hidden": "true" }, name)));
@@ -209,8 +215,8 @@ class Calendar {
       if (isStart) classes.push("range-start");
       if (isEnd) classes.push("range-end");
       if (s.checkIn && s.checkOut && day > s.checkIn && day < s.checkOut) classes.push("in-range");
-      // Past days, and days beyond the longest stay while the check-out is being picked.
-      const disabled = day < this.today || (latestCheckOut && day > latestCheckOut);
+      // Past days, days past the horizon, and days beyond the longest stay while the check-out is being picked.
+      const disabled = day < this.today || day > this.lastDay || (latestCheckOut && day > latestCheckOut);
       grid.append(this.el("button", {
         class: classes.join(" "), type: "button", "data-action": "day", "data-value": day,
         "aria-label": Dates.dayLabel(day), "aria-pressed": String(isStart || isEnd), ...(disabled ? { disabled: "" } : {}),
@@ -233,11 +239,6 @@ class Calendar {
       this.el("span", { class: "cal-nights-title" }, "Ночей"),
       stepper("от", s.nightsFrom, "from-", "from+", s.nightsFrom <= low, s.nightsFrom >= high),
       stepper("до", s.nightsTo, "to-", "to+", s.nightsTo <= low, s.nightsTo >= high));
-  }
-
-  scrollRibbon() {
-    const chip = this.root.querySelector('.cal-chip[aria-pressed="true"]');
-    if (chip) chip.scrollIntoView({ block: "nearest", inline: "center" });
   }
 
   el(tag, attributes, ...children) {

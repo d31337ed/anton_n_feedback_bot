@@ -59,6 +59,15 @@ def month_index(value: date | str) -> int:
     return value.year * 12 + value.month - 1
 
 
+def add_months(day: date, months: int) -> date:
+    """The same day of the month `months` later, clamped to the month's length."""
+    index = month_index(day) + months
+    year, month = divmod(index, 12)
+    month += 1
+    next_month = date(year + month // 12, month % 12 + 1, 1)
+    return date(year, month, min(day.day, (next_month - timedelta(days=1)).day))
+
+
 def dates_label(dates: dict, today: date) -> str:
     """Human-readable dates, the same as the mini app shows (UI requirements D-2)."""
     if dates["flexible"]:
@@ -124,6 +133,8 @@ def _clean_dates(raw, errors: dict, today: date) -> dict | None:
     # The client's "today" may differ from the server's by a day either way.
     first_month = month_index(today - timedelta(days=1))
     last_month = month_index(today + timedelta(days=1)) + HORIZON_MONTHS - 1
+    # Exact dates may go up to the same day HORIZON_MONTHS later.
+    last_day = add_months(today + timedelta(days=1), HORIZON_MONTHS)
     if raw.get("flexible"):
         months = raw.get("months")
         nights_from = _int(raw.get("nightsFrom"), *FLEX_NIGHTS, errors, "dates.nightsFrom")
@@ -152,12 +163,14 @@ def _clean_dates(raw, errors: dict, today: date) -> dict | None:
         return None
     if check_in < today - timedelta(days=1):
         errors["dates.checkIn"] = "Дата заезда уже прошла"
-    elif month_index(check_in) > last_month:
+    elif check_in > last_day:
         errors["dates.checkIn"] = "Дата заезда вне доступного периода"
     if check_out <= check_in:
         errors["dates.checkOut"] = "Выезд должен быть позже заезда"
     elif (check_out - check_in).days > MAX_NIGHTS:
         errors["dates.checkOut"] = f"Не больше {MAX_NIGHTS} ночей"
+    elif check_out > last_day:
+        errors["dates.checkOut"] = "Дата выезда вне доступного периода"
     return {"flexible": False, "checkIn": check_in.isoformat(), "checkOut": check_out.isoformat(),
             "months": None, "nightsFrom": None, "nightsTo": None}
 

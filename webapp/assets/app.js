@@ -202,6 +202,7 @@ function openForm() {
 function openCalendar() {
   calendar.open();
   showScreen("calendar");
+  calendar.scrollToSelection();
 }
 
 function focusOn(element) {
