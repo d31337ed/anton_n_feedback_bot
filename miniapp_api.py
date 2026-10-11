@@ -7,6 +7,7 @@ from aiogram import Bot
 from aiogram.utils.web_app import WebAppUser, safe_parse_webapp_init_data
 from aiohttp import web
 
+import hotel_form
 import hotel_requests
 from settings import settings
 from topic_registry import redis
@@ -68,8 +69,10 @@ async def get_request(request: web.Request) -> web.Response:
         status, topic_id, record = await hotel_requests.resolve(user.id, parse_request_id(request.query.get("request_id")))
     except LookupError:
         return error(404, "not_found")
-    fields = record.get("fields", {}) if record and status == hotel_requests.ACCEPTED else {}
-    return web.json_response({"status": status, "request_id": topic_id, "fields": fields})
+    form = record.get("form") if record and status == hotel_requests.ACCEPTED else None
+    preferences = await hotel_requests.get_preferences(user.id) if form is None else {}
+    return web.json_response({"status": status, "request_id": topic_id, "form": form, "preferences": preferences,
+                              "config": hotel_form.CONFIG})
 
 
 async def submit_request(request: web.Request) -> web.Response:
@@ -83,8 +86,8 @@ async def submit_request(request: web.Request) -> web.Response:
         return error(400, "bad_idempotency_key")
     request_id = parse_request_id(body.get("request_id"))
     try:
-        fields = hotel_requests.clean_fields(body.get("fields") or {})
-    except hotel_requests.ValidationError as e:
+        form = hotel_form.clean_request(body.get("form") or {})
+    except hotel_form.ValidationError as e:
         return error(422, "validation", fields=e.errors)
     idempotency_key = f"request:idem:{user.id}:{key}"
     if not await redis.set(idempotency_key, "pending", nx=True, ex=IDEMPOTENCY_PENDING_TTL):
@@ -94,7 +97,7 @@ async def submit_request(request: web.Request) -> web.Response:
         logging.info(f"Repeated mini app submit from user {user.id}, returning the saved result")
         return web.json_response(json.loads(cached))
     try:
-        status, topic_id = await hotel_requests.submit(request.app[BOT], user, fields, request_id)
+        status, topic_id = await hotel_requests.submit(request.app[BOT], user, form, request_id)
     except LookupError:
         await redis.delete(idempotency_key)
         return error(404, "not_found")
