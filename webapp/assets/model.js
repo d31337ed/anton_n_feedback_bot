@@ -154,12 +154,10 @@ const HotelModel = (() => {
     };
   }
 
-  // Mirrors comment_text on the backend: the dates comment first, then the general one.
-  function commentText(data) {
-    const parts = [];
-    if (data.datesComment) parts.push(`По датам: ${data.datesComment}`);
-    if (data.comment) parts.push(data.comment);
-    return parts.join("\n") || null;
+  // Mirrors comments_text on the backend: one bullet per filled comment.
+  const COMMENT_PARTS = [["datesComment", "По датам"], ["comment", "В целом"]];
+  function commentsText(data) {
+    return COMMENT_PARTS.filter(([key]) => data[key]).map(([key, label]) => `• ${label}: ${data[key]}`).join("\n") || null;
   }
 
   // Review screen rows (FR-4.1) - the same as the summary the bot sends to the chat.
@@ -183,13 +181,13 @@ const HotelModel = (() => {
       if (search.chains) rows.push({ key: "search", label: "Сети", value: search.chains });
       if (search.hotelType !== "any") rows.push({ key: "search", label: "Тип отеля", value: HOTEL_TYPES[search.hotelType].toLowerCase() });
     }
-    const comment = commentText(data);
-    if (comment) rows.push({ key: data.comment ? "comment" : "dates", label: "Комментарий", value: comment });
+    const comments = commentsText(data);
+    if (comments) rows.push({ key: data.comment ? "comment" : "dates", label: "Комментарии", value: comments });
     return rows;
   }
 
   return {
     CATEGORIES, BEDS, CURRENCIES, HOTEL_TYPES, LIMITS, defaults, defaultSearch, fromRequest, applyPreferences,
-    budgetCurrency, payload, validate, guestsText, roomText, searchText, changed, commentText, reviewRows,
+    budgetCurrency, payload, validate, guestsText, roomText, searchText, changed, commentsText, reviewRows,
   };
 })();

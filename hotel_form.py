@@ -286,18 +286,19 @@ def budget_text(request: dict) -> str:
 SEARCH_ROW_DEFAULTS = {"Бюджет": "—", "Район": "—", "Бесплатные ночи": "нет", "Сети": "любые", "Тип отеля": HOTEL_TYPES["any"]}
 
 
-def comment_text(request: dict) -> str | None:
-    """All comments of the request as one text: the dates comment first, then the general one."""
-    parts = []
-    if request.get("datesComment"):
-        parts.append(f"По датам: {request['datesComment']}")
-    if request.get("comment"):
-        parts.append(request["comment"])
-    return "\n".join(parts) or None
+# Comments from different parts of the form, in the order they are shown.
+COMMENT_PARTS = (("datesComment", "По датам"), ("comment", "В целом"))
+COMMENTS_LABEL = "Комментарии"
+
+
+def comments_text(request: dict) -> str | None:
+    """One bullet per filled comment, e.g. "• По датам: любые выходные"."""
+    lines = [f"• {label}: {request[key]}" for key, label in COMMENT_PARTS if request.get(key)]
+    return "\n".join(lines) or None
 
 
 def rows(request: dict, full: bool = False) -> list[tuple[str, str]]:
-    """(label, plain value) pairs. full=True also lists default values - used to diff two versions."""
+    """(label, plain value) pairs. full=True also lists default values and each comment separately - used to diff two versions."""
     result = [("Отель", request["hotel"]) if request["mode"] == MODE_HOTEL else ("Город", request["city"]),
               ("Даты", request["dates"]["label"]),
               ("Гости", guests_text(request["adults"], request["childrenAges"]))]
@@ -313,14 +314,20 @@ def rows(request: dict, full: bool = False) -> list[tuple[str, str]]:
                              ("Тип отеля", HOTEL_TYPES[search["hotelType"]])):
             if full or value != SEARCH_ROW_DEFAULTS[label]:
                 result.append((label, value))
-    comment = comment_text(request)
-    if full or comment:
-        result.append(("Комментарий", comment or "—"))
+    if full:
+        result.extend((f"{COMMENTS_LABEL} · {label}", request.get(key) or "—") for key, label in COMMENT_PARTS)
+    elif comments := comments_text(request):
+        result.append((COMMENTS_LABEL, comments))
     return result
 
 
 def format_request(request: dict) -> str:
-    return "\n".join(f"<b>{label}</b>: {html.escape(value)}" for label, value in rows(request))
+    lines = []
+    for label, value in rows(request):
+        # The comments are a list of bullets, so they start on a new line.
+        separator = "\n" if label == COMMENTS_LABEL else " "
+        lines.append(f"<b>{label}</b>:{separator}{html.escape(value)}")
+    return "\n".join(lines)
 
 
 def format_changes(old: dict, new: dict) -> str:
