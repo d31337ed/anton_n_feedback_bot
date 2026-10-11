@@ -162,11 +162,27 @@ function renderReview() {
   $("#review-error").hidden = true;
 }
 
+function cssColor(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+// The page has its own palette; Telegram only decides light or dark. Its chrome is repainted to match.
+function applyTheme() {
+  document.documentElement.dataset.theme = tg.colorScheme === "dark" ? "dark" : "light";
+  const bg = cssColor("--bg");
+  if (tg.isVersionAtLeast("6.9")) {
+    tg.setHeaderColor(bg);
+    tg.setBackgroundColor(bg);
+  }
+  if (tg.isVersionAtLeast("7.10")) tg.setBottomBarColor(bg);
+  updateButtons();
+}
+
 function mainButton(text, active) {
   tg.MainButton.setParams({
     text, is_visible: true, is_active: active,
-    color: active ? tg.themeParams.button_color || "#2b6ca3" : tg.themeParams.hint_color || "#9aa5ad",
-    text_color: tg.themeParams.button_text_color || "#ffffff",
+    color: cssColor(active ? "--accent" : "--hint"),
+    text_color: cssColor("--accent-text"),
   });
 }
 
@@ -409,6 +425,8 @@ tg.BackButton.onClick(() => {
 
 // Pinch zoom on iOS ignores the viewport meta in some web views.
 document.addEventListener("gesturestart", (event) => event.preventDefault());
+tg.onEvent("themeChanged", applyTheme);
+applyTheme();
 tg.ready();
 tg.expand();
 load();

@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
+<meta name="color-scheme" content="light dark">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Заявка на спецтариф</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -19,7 +20,8 @@
   </section>
 
   <form id="screen-form" class="screen" hidden novalidate>
-    <div class="segmented" role="radiogroup" aria-label="Режим">
+    <h1 class="title">Спецтариф</h1>
+    <div class="tabs" role="radiogroup" aria-label="Режим">
       <button type="button" role="radio" data-set="mode" data-value="hotel">Конкретный отель</button>
       <button type="button" role="radio" data-set="mode" data-value="city">Подбор в городе</button>
     </div>
@@ -128,6 +130,7 @@
   <section id="screen-calendar" class="screen" hidden></section>
 
   <section id="screen-review" class="screen" hidden>
+    <h1 class="title">Проверка</h1>
     <p class="hint intro">Так заявка придёт в чат. Если всё верно — отправляйте.</p>
     <div id="review-list" class="card"></div>
     <p id="review-error" class="error banner" hidden></p>
