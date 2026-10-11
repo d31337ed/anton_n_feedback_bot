@@ -43,7 +43,7 @@ async def handle_report_button(message: Message, state: FSMContext):
     data = await state.get_data()
     if not data:
         await state.set_state(WelcomeFlow.report_issue_state)
-        await message.reply(text=t("menu.services"), reply_markup=IssueKeyboard, parse_mode="html")
+        await message.reply(text=t("menu.report"), reply_markup=IssueKeyboard, parse_mode="html")
     else:
         await message.reply(text=t("common.inquiry_open"), parse_mode="html")
 

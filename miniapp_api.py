@@ -23,8 +23,7 @@ BOT = web.AppKey("bot", Bot)
 # Asset URLs carry a content hash, so clients never mix a new page with cached old scripts.
 ASSET_VERSION = hashlib.sha256(b"".join(p.read_bytes() for p in sorted((WEBAPP_DIR / "assets").iterdir()))).hexdigest()[:12]
 # The page carries the mini app's texts in every language; it picks one by Telegram's language code.
-MINIAPP_TEXTS = ("form.", "request.")
-LOCALES_JSON = json.dumps({lang: {key: value for key, value in catalog.items() if key.startswith(MINIAPP_TEXTS)}
+LOCALES_JSON = json.dumps({lang: {key: value for key, value in catalog.items() if key.startswith(texts.MINIAPP_PREFIXES)}
                            for lang, catalog in texts.CATALOGS.items()}, ensure_ascii=False).replace("</", "<\\/")
 INDEX_HTML = ((WEBAPP_DIR / "index.html").read_text().replace("__ASSET_VERSION__", ASSET_VERSION)
               .replace("__LOCALES__", LOCALES_JSON).replace("__DEFAULT_LANG__", texts.DEFAULT_LANG))

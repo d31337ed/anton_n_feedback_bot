@@ -1,4 +1,5 @@
 import ecs_logging
+import html
 import asyncio
 import sys
 import logging
@@ -60,7 +61,8 @@ async def command_start_handler(message: Message, state: FSMContext) -> None:
         user_name = message.from_user.first_name
         await state.set_state(WelcomeFlow.start_state)
         logging.info(f"Received feedback /start from user: {user_id}, Name: {user_name}")
-        await message.answer(text=t("menu.welcome").format(user_name=user_name),
+        # The name goes into HTML, so "<" or "&" in it must not break the message.
+        await message.answer(text=t("menu.welcome").format(user_name=html.escape(user_name)),
                              parse_mode="html",
                              reply_markup=MainMenuKeyboard)
         logging.info(f"Sent welcome message to user {user_id} with name {user_name}")
