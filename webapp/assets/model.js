@@ -155,9 +155,9 @@ const HotelModel = (() => {
   }
 
   // Mirrors comments_text on the backend: one bullet per filled comment.
-  const COMMENT_PARTS = [["datesComment", "По датам"], ["comment", "В целом"]];
+  const COMMENT_PARTS = [["По датам", (d) => d.datesComment], ["По номеру", (d) => d.room.customText], ["В целом", (d) => d.comment]];
   function commentsText(data) {
-    return COMMENT_PARTS.filter(([key]) => data[key]).map(([key, label]) => `• ${label}: ${data[key]}`).join("\n") || null;
+    return COMMENT_PARTS.filter(([, get]) => get(data)).map(([label, get]) => `• ${label}: ${get(data)}`).join("\n") || null;
   }
 
   // Review screen rows (FR-4.1) - the same as the summary the bot sends to the chat.
@@ -169,7 +169,9 @@ const HotelModel = (() => {
     ];
     const room = data.room;
     if (room.category !== "best_rate" || room.bed !== "any") {
-      rows.push({ key: "room", label: "Номер", value: `${room.category === "custom" ? room.customText : CATEGORIES[room.category]} · ${BEDS_SHORT[room.bed]}` });
+      // The custom text itself is listed with the comments.
+      const category = room.category === "custom" ? "Пользовательский" : CATEGORIES[room.category];
+      rows.push({ key: "room", label: "Номер", value: `${category} · ${BEDS_SHORT[room.bed]}` });
     }
     rows.push({ key: "currency", label: "Валюта", value: CURRENCIES_SUMMARY[data.currency] });
     const search = data.search;
@@ -182,7 +184,7 @@ const HotelModel = (() => {
       if (search.hotelType !== "any") rows.push({ key: "search", label: "Тип отеля", value: HOTEL_TYPES[search.hotelType].toLowerCase() });
     }
     const comments = commentsText(data);
-    if (comments) rows.push({ key: data.comment ? "comment" : "dates", label: "Комментарии", value: comments });
+    if (comments) rows.push({ key: data.comment ? "comment" : data.room.customText ? "room" : "dates", label: "Комментарии", value: comments });
     return rows;
   }
 

@@ -4,7 +4,7 @@ from datetime import date, timedelta
 
 MODE_HOTEL, MODE_CITY = "hotel", "city"
 ROOM_CATEGORIES = {"best_rate": "Самый выгодный", "club": "С лаунжем", "view": "С видом", "suite": "Сьют",
-                   "custom": "Свои предпочтения"}
+                   "custom": "Пользовательский"}
 BEDS = {"any": "любая кровать", "king": "King", "twin": "Twin"}
 CURRENCIES = {"USD": "USD", "EUR": "EUR", "HOTEL": "Валюта отеля", "RUB": "RUB"}
 HOTEL_TYPES = {"any": "любой", "city": "городской", "beach": "пляжный"}
@@ -270,8 +270,8 @@ def guests_text(adults: int, ages: list) -> str:
 
 
 def room_text(room: dict) -> str:
-    category = room["customText"] if room["category"] == "custom" else ROOM_CATEGORIES[room["category"]]
-    return f"{category} · {BEDS[room['bed']]}"
+    # The custom text itself is listed with the comments.
+    return f"{ROOM_CATEGORIES[room['category']]} · {BEDS[room['bed']]}"
 
 
 def budget_text(request: dict) -> str:
@@ -287,13 +287,15 @@ SEARCH_ROW_DEFAULTS = {"Бюджет": "—", "Район": "—", "Беспла
 
 
 # Comments from different parts of the form, in the order they are shown.
-COMMENT_PARTS = (("datesComment", "По датам"), ("comment", "В целом"))
+COMMENT_PARTS = (("По датам", lambda r: r.get("datesComment")),
+                 ("По номеру", lambda r: r["room"]["customText"]),
+                 ("В целом", lambda r: r.get("comment")))
 COMMENTS_LABEL = "Комментарии"
 
 
 def comments_text(request: dict) -> str | None:
     """One bullet per filled comment, e.g. "• По датам: любые выходные"."""
-    lines = [f"• {label}: {request[key]}" for key, label in COMMENT_PARTS if request.get(key)]
+    lines = [f"• {label}: {text}" for label, get in COMMENT_PARTS if (text := get(request))]
     return "\n".join(lines) or None
 
 
@@ -315,7 +317,7 @@ def rows(request: dict, full: bool = False) -> list[tuple[str, str]]:
             if full or value != SEARCH_ROW_DEFAULTS[label]:
                 result.append((label, value))
     if full:
-        result.extend((f"{COMMENTS_LABEL} · {label}", request.get(key) or "—") for key, label in COMMENT_PARTS)
+        result.extend((f"{COMMENTS_LABEL} · {label}", get(request) or "—") for label, get in COMMENT_PARTS)
     elif comments := comments_text(request):
         result.append((COMMENTS_LABEL, comments))
     return result
