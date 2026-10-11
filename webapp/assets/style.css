@@ -99,6 +99,7 @@ select {
 }
 
 .block-field { padding: 12px 14px; }
+#custom-room { margin-top: 10px; }
 
 /* ---------- rows ---------- */
 
@@ -221,11 +222,13 @@ select {
 .stepper output { min-width: 30px; text-align: center; font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
 
 .budget { gap: 6px; }
-.budget .hint { white-space: nowrap; }
+#budget-unit { white-space: nowrap; }
 .budget input {
   width: 76px;
   height: 40px;
   padding: 0 10px;
+  /* An inherited line-height pushes the iOS placeholder off center. */
+  line-height: normal;
   background: var(--bg);
   text-align: right;
   font-variant-numeric: tabular-nums;
