@@ -8,6 +8,9 @@ const HotelModel = (() => {
   const BEDS_SHORT = { any: "любая кровать", king: "King", twin: "Twin" };
   const CURRENCIES = { USD: "USD", EUR: "EUR", HOTEL: "Local", RUB: "RUB" };
   const CURRENCIES_SUMMARY = { USD: "USD", EUR: "EUR", HOTEL: "Валюта отеля", RUB: "RUB" };
+  const BUDGET_UNITS = { night: "за ночь", stay: "за стей" };
+  // Below these a per-night budget is very unlikely to find anything; there is no limit for the hotel's currency.
+  const LOW_BUDGET = { USD: 100, EUR: 90, RUB: 8000 };
   const HOTEL_TYPES = { any: "Любой", city: "Городской", beach: "Пляжный" };
   const LIMITS = { place: 200, customRoom: 200, area: 100, chains: 200, comment: 2000, datesComment: 500, budget: 1000000 };
 
@@ -26,7 +29,8 @@ const HotelModel = (() => {
 
   function defaultSearch() {
     // budgetCurrency null = follows the response currency until the user picks one.
-    return { budgetPerNight: "", budgetCurrency: null, area: "", freeNights: false, chains: "", hotelType: "any" };
+    // budgetOn false = the budget is left to the agent; the typed amount is kept but not sent.
+    return { budgetOn: false, budget: "", budgetCurrency: null, budgetUnit: "night", area: "", freeNights: false, chains: "", hotelType: "any" };
   }
 
   // A saved request (edit mode) back into form state.
@@ -42,8 +46,9 @@ const HotelModel = (() => {
     state.currency = form.currency;
     if (form.search) {
       state.search = {
-        budgetPerNight: form.search.budgetPerNight == null ? "" : String(form.search.budgetPerNight),
-        budgetCurrency: form.search.budgetCurrency, area: form.search.area || "",
+        budgetOn: form.search.budget != null,
+        budget: form.search.budget == null ? "" : String(form.search.budget),
+        budgetCurrency: form.search.budgetCurrency, budgetUnit: form.search.budgetUnit || "night", area: form.search.area || "",
         freeNights: form.search.freeNights, chains: form.search.chains || "", hotelType: form.search.hotelType,
       };
     }
@@ -66,6 +71,24 @@ const HotelModel = (() => {
     return state.search.budgetCurrency || state.currency;
   }
 
+  // The amount that is sent: none while the budget is left to the agent or the field is empty.
+  function budgetAmount(state) {
+    const value = state.search.budget.trim();
+    return state.search.budgetOn && value ? Number(value) : null;
+  }
+
+  // The hint under the budget: the amount is valid but too low to find anything (per stay, divided by the nights).
+  function lowBudget(state) {
+    const amount = state.mode === "city" ? budgetAmount(state) : null;
+    const limit = LOW_BUDGET[budgetCurrency(state)];
+    if (!amount || !limit) return false;
+    if (state.search.budgetUnit === "night") return amount < limit;
+    const dates = state.dates;
+    if (!dates) return false;
+    const nights = dates.flexible ? dates.nightsFrom : Dates.daysBetween(dates.checkIn, dates.checkOut);
+    return amount < limit * nights;
+  }
+
   // Values of the hidden mode stay in the state but are not sent (FR-3.1, S-4).
   function payload(state) {
     const city = state.mode === "city";
@@ -83,8 +106,9 @@ const HotelModel = (() => {
       },
       currency: state.currency,
       search: city ? {
-        budgetPerNight: state.search.budgetPerNight.trim() ? Number(state.search.budgetPerNight) : null,
+        budget: budgetAmount(state),
         budgetCurrency: budgetCurrency(state),
+        budgetUnit: state.search.budgetUnit,
         area: text(state.search.area),
         freeNights: state.search.freeNights,
         chains: text(state.search.chains),
@@ -102,10 +126,10 @@ const HotelModel = (() => {
     if (!state[place].trim()) errors[place] = "Обязательное поле";
     if (!state.dates) errors.dates = "Выберите даты";
     if (state.room.category === "custom" && !state.room.customText.trim()) errors["room.customText"] = "Опишите, что важно в номере";
-    if (state.mode === "city" && state.search.budgetPerNight.trim()) {
-      const budget = Number(state.search.budgetPerNight);
-      if (!/^\d+$/.test(state.search.budgetPerNight.trim()) || budget < 1 || budget > LIMITS.budget) {
-        errors["search.budgetPerNight"] = "Целое число больше нуля";
+    if (state.mode === "city" && state.search.budgetOn && state.search.budget.trim()) {
+      const budget = Number(state.search.budget);
+      if (!/^\d+$/.test(state.search.budget.trim()) || budget < 1 || budget > LIMITS.budget) {
+        errors["search.budget"] = "Целое число больше нуля";
       }
     }
     if (state.comment.length > LIMITS.comment) errors.comment = `Не больше ${LIMITS.comment} символов`;
@@ -139,8 +163,9 @@ const HotelModel = (() => {
   }
 
   function budgetText(search, currency) {
-    if (search.budgetPerNight == null) return null;
-    return currency === "HOTEL" ? `до ${search.budgetPerNight} в валюте отеля за ночь` : `до ${search.budgetPerNight} ${currency}/ночь`;
+    if (search.budget == null) return null;
+    const unit = BUDGET_UNITS[search.budgetUnit];
+    return currency === "HOTEL" ? `до ${search.budget} в валюте отеля ${unit}` : `до ${search.budget} ${currency} ${unit}`;
   }
 
   // P-4: rows whose value differs from the default are highlighted.
@@ -189,7 +214,7 @@ const HotelModel = (() => {
   }
 
   return {
-    CATEGORIES, BEDS, CURRENCIES, HOTEL_TYPES, LIMITS, defaults, defaultSearch, fromRequest, applyPreferences,
-    budgetCurrency, payload, validate, guestsText, roomText, searchText, changed, commentsText, reviewRows,
+    CATEGORIES, BEDS, CURRENCIES, BUDGET_UNITS, HOTEL_TYPES, LIMITS, defaults, defaultSearch, fromRequest, applyPreferences,
+    budgetCurrency, lowBudget, payload, validate, guestsText, roomText, searchText, changed, commentsText, reviewRows,
   };
 })();

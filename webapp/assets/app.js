@@ -63,6 +63,7 @@ buildChoices($("#category-chips"), "room.category", HotelModel.CATEGORIES, "radi
 buildChoices($("#bed-segmented"), "room.bed", HotelModel.BEDS, "radio");
 buildChoices($("#hotel-type-segmented"), "search.hotelType", HotelModel.HOTEL_TYPES, "radio");
 buildChoices($("#currency-chips"), "currency", HotelModel.CURRENCIES, "radio");
+$("#budget-unit").replaceChildren(...Object.entries(HotelModel.BUDGET_UNITS).map(([value, label]) => el("option", { value }, label)));
 $("#budget-currency").replaceChildren(...Object.entries(HotelModel.CURRENCIES).map(([value, label]) => el("option", { value }, label)));
 
 // ---------- rendering ----------
@@ -127,6 +128,10 @@ function renderForm() {
   $("#search-value").textContent = HotelModel.searchText(state.search);
   $("#free-nights").checked = state.search.freeNights;
   $("#budget-currency").value = HotelModel.budgetCurrency(state);
+  $("#budget-unit").value = state.search.budgetUnit;
+  $("#budget-on").checked = state.search.budgetOn;
+  $("#budget-off").hidden = state.search.budgetOn;
+  $("#budget-row").hidden = !state.search.budgetOn;
 
   const changed = HotelModel.changed(state);
   $("#room-value").classList.toggle("changed", changed.room);
@@ -140,6 +145,8 @@ function renderForm() {
     const name = node.dataset.error;
     node.textContent = touched.has(name) && errors[name] ? errors[name] : "";
   }
+  // A warning, not an error: shown once the user has left the field, and it does not block sending.
+  $("#budget-low").hidden = !(touched.has("search.budget") && !errors["search.budget"] && HotelModel.lowBudget(state));
   for (const input of $$("[data-input]")) input.classList.toggle("invalid", touched.has(input.dataset.input) && Boolean(errors[input.dataset.input]));
   updateButtons();
   updateClosingConfirmation();
@@ -220,7 +227,7 @@ function editFromReview(key) {
 }
 
 function openReview() {
-  for (const name of ["hotel", "city", "dates", "room.customText", "search.budgetPerNight", "comment"]) touched.add(name);
+  for (const name of ["hotel", "city", "dates", "room.customText", "search.budget", "comment"]) touched.add(name);
   const errors = renderForm();
   const first = Object.keys(errors)[0];
   if (first) {
@@ -359,6 +366,15 @@ $("#free-nights").addEventListener("change", (event) => {
   haptic();
   changeState(() => { state.search.freeNights = event.target.checked; });
 });
+$("#budget-on").addEventListener("change", (event) => {
+  haptic();
+  changeState(() => { state.search.budgetOn = event.target.checked; });
+  if (event.target.checked && !state.search.budget) $("#budget").focus();
+});
+$("#budget-unit").addEventListener("change", (event) => {
+  haptic();
+  changeState(() => { state.search.budgetUnit = event.target.value; });
+});
 $("#budget-currency").addEventListener("change", (event) => {
   haptic();
   changeState(() => { state.search.budgetCurrency = event.target.value; });
@@ -366,8 +382,8 @@ $("#budget-currency").addEventListener("change", (event) => {
 $("#search-reset").addEventListener("click", () => {
   haptic();
   changeState(() => {
-    const { budgetPerNight, budgetCurrency } = state.search;
-    state.search = { ...HotelModel.defaultSearch(), budgetPerNight, budgetCurrency };
+    const { budgetOn, budget, budgetCurrency, budgetUnit } = state.search;
+    state.search = { ...HotelModel.defaultSearch(), budgetOn, budget, budgetCurrency, budgetUnit };
   });
 });
 $("#children-ages").addEventListener("change", (event) => {

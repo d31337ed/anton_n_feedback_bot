@@ -7,6 +7,7 @@ ROOM_CATEGORIES = {"best_rate": "Самый выгодный", "club": "С ла�
                    "custom": "Пользовательский"}
 BEDS = {"any": "любая кровать", "king": "King", "twin": "Twin"}
 CURRENCIES = {"USD": "USD", "EUR": "EUR", "HOTEL": "Валюта отеля", "RUB": "RUB"}
+BUDGET_UNITS = {"night": "за ночь", "stay": "за стей"}
 HOTEL_TYPES = {"any": "любой", "city": "городской", "beach": "пляжный"}
 
 MAX_NIGHTS = 30
@@ -24,7 +25,8 @@ CONFIG = {"maxNights": MAX_NIGHTS, "horizonMonths": HORIZON_MONTHS, "flexMonths"
           "flexNights": list(FLEX_NIGHTS), "maxDatesComment": MAX_DATES_COMMENT, "adults": list(ADULTS), "maxChildren": MAX_CHILDREN, "maxChildAge": MAX_CHILD_AGE}
 
 DEFAULT_ROOM = {"category": "best_rate", "customText": None, "bed": "any"}
-DEFAULT_SEARCH = {"budgetPerNight": None, "budgetCurrency": "USD", "area": None, "freeNights": False, "chains": None,
+# budget None means the choice is left to the agent.
+DEFAULT_SEARCH = {"budget": None, "budgetCurrency": "USD", "budgetUnit": "night", "area": None, "freeNights": False, "chains": None,
                   "hotelType": "any"}
 # What a returning user gets prefilled instead of the defaults.
 PREFERENCE_FIELDS = ("adults", "childrenAges", "currency", "bed")
@@ -216,10 +218,11 @@ def clean_request(raw: dict, today: date | None = None) -> dict:
     if mode == MODE_CITY:
         search = raw.get("search") if isinstance(raw.get("search"), dict) else {}
         request["search"] = {
-            "budgetPerNight": _int(search.get("budgetPerNight"), 1, MAX_BUDGET, errors, "search.budgetPerNight"),
+            "budget": _int(search.get("budget"), 1, MAX_BUDGET, errors, "search.budget"),
             # The budget has its own currency; it follows the response currency until changed.
             "budgetCurrency": _choice(search.get("budgetCurrency"), CURRENCIES, request["currency"], errors,
                                       "search.budgetCurrency"),
+            "budgetUnit": _choice(search.get("budgetUnit"), BUDGET_UNITS, "night", errors, "search.budgetUnit"),
             "area": _text(search.get("area"), MAX_AREA, errors, "search.area"),
             "freeNights": search.get("freeNights") is True,
             "chains": _text(search.get("chains"), MAX_CHAINS, errors, "search.chains"),
@@ -274,16 +277,22 @@ def room_text(room: dict) -> str:
     return f"{ROOM_CATEGORIES[room['category']]} · {BEDS[room['bed']]}"
 
 
+NO_BUDGET = "на усмотрение агента"
+
+
 def budget_text(request: dict) -> str:
     search = request["search"]
-    if search["budgetPerNight"] is None:
-        return "—"
+    # Requests saved before the budget unit existed have budgetPerNight.
+    budget = search.get("budget", search.get("budgetPerNight"))
+    if budget is None:
+        return NO_BUDGET
+    unit = BUDGET_UNITS[search.get("budgetUnit", "night")]
     if search["budgetCurrency"] == "HOTEL":
-        return f"до {search['budgetPerNight']} в валюте отеля за ночь"
-    return f"до {search['budgetPerNight']} {search['budgetCurrency']}/ночь"
+        return f"до {budget} в валюте отеля {unit}"
+    return f"до {budget} {search['budgetCurrency']} {unit}"
 
 
-SEARCH_ROW_DEFAULTS = {"Бюджет": "—", "Район": "—", "Бесплатные ночи": "нет", "Сети": "любые", "Тип отеля": HOTEL_TYPES["any"]}
+SEARCH_ROW_DEFAULTS = {"Бюджет": NO_BUDGET, "Район": "—", "Бесплатные ночи": "нет", "Сети": "любые", "Тип отеля": HOTEL_TYPES["any"]}
 
 
 # Comments from different parts of the form, in the order they are shown.
