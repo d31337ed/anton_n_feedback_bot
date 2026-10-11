@@ -1,4 +1,4 @@
-/* Own graphite palette; light or dark follows Telegram's color scheme via html[data-theme]. */
+/* One dark palette (Ultima): black ground, white type, white selection. */
 @font-face {
   font-family: "Geologica";
   font-style: normal;
@@ -25,45 +25,24 @@
 }
 
 :root {
-  --bg: #f1f2f4;
-  --card: #ffffff;
-  --text: #111316;
-  --hint: #858a93;
-  --accent: #111316;
-  --accent-text: #f1f2f4;
-  --separator: #eceef1;
-  --danger: #c43d3d;
-  --field-bg: #f4f5f7;
-  --field-border: #e6e8eb;
-  --seg-bg: #e6e8eb;
-  --seg-on: #ffffff;
-  --seg-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  --card-border: transparent;
-  --range: #eceef1;
-  --disabled: #c9ccd2;
+  --bg: #000000;
+  --card: #0d0d0e;
+  --text: #ffffff;
+  --hint: #8a8a8f;
+  --accent: #ffffff;
+  --accent-text: #000000;
+  --separator: #1c1c1e;
+  --danger: #ff5f57;
+  --field-bg: #000000;
+  --field-border: #232325;
+  --seg-bg: #000000;
+  --card-border: #19191b;
+  --range: #1f1f22;
+  --disabled: #38383b;
   --radius: 12px;
   --field-radius: 10px;
   --font: "Geologica", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   --ease: 0.2s cubic-bezier(0.2, 0.7, 0.2, 1);
-  color-scheme: light;
-}
-:root[data-theme="dark"] {
-  --bg: #0c0d0f;
-  --card: #15171a;
-  --text: #e8e9eb;
-  --hint: #7a7f88;
-  --accent: #d9dce1;
-  --accent-text: #0c0d0f;
-  --separator: #22252a;
-  --danger: #e2615b;
-  --field-bg: #0f1113;
-  --field-border: #262a2f;
-  --seg-bg: #0f1113;
-  --seg-on: #2a2e34;
-  --seg-shadow: none;
-  --card-border: #1f2226;
-  --range: #23272c;
-  --disabled: #3a3e45;
   color-scheme: dark;
 }
 
@@ -97,7 +76,7 @@ button, label, .row, .segmented, .tabs, .chips, .stepper, .cal-grid, .cal-months
 .notice { min-height: 60vh; justify-content: center; align-items: center; text-align: center; }
 .notice p { margin: 0; font-size: 16px; }
 
-.title { margin: 4px 4px 8px; font-size: 30px; font-weight: 200; letter-spacing: -0.01em; line-height: 1.15; }
+.title { margin: 4px 4px 8px; font-size: 34px; font-weight: 200; letter-spacing: -0.01em; line-height: 1.15; }
 .hint { color: var(--hint); }
 /* A call to action in place of a value, e.g. dates not chosen yet. */
 .accent { color: var(--text); font-weight: 400; }
@@ -248,7 +227,7 @@ select {
   padding: 0 6px;
   transition: background-color var(--ease), color var(--ease), box-shadow var(--ease);
 }
-.segmented button[aria-checked="true"] { background: var(--seg-on); color: var(--text); font-weight: 400; box-shadow: var(--seg-shadow); }
+.segmented button[aria-checked="true"] { background: var(--accent); color: var(--accent-text); font-weight: 400; }
 
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chips.nowrap { flex-wrap: nowrap; }
@@ -434,7 +413,7 @@ select {
   main { padding-left: 12px; padding-right: 12px; }
   .currency-row .chip { padding: 0 8px; font-size: 12px; }
   .budget input { width: 64px; }
-  .title { font-size: 26px; }
+  .title { font-size: 30px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
