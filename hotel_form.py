@@ -22,7 +22,8 @@ CONFIG = {"maxNights": MAX_NIGHTS, "horizonMonths": HORIZON_MONTHS, "flexNights"
           "adults": list(ADULTS), "maxChildren": MAX_CHILDREN, "maxChildAge": MAX_CHILD_AGE}
 
 DEFAULT_ROOM = {"category": "best_rate", "customText": None, "bed": "any"}
-DEFAULT_SEARCH = {"budgetPerNight": None, "area": None, "freeNights": False, "chains": None, "hotelType": "any"}
+DEFAULT_SEARCH = {"budgetPerNight": None, "budgetCurrency": "USD", "area": None, "freeNights": False, "chains": None,
+                  "hotelType": "any"}
 # What a returning user gets prefilled instead of the defaults.
 PREFERENCE_FIELDS = ("adults", "childrenAges", "currency", "bed")
 
@@ -201,6 +202,9 @@ def clean_request(raw: dict, today: date | None = None) -> dict:
         search = raw.get("search") if isinstance(raw.get("search"), dict) else {}
         request["search"] = {
             "budgetPerNight": _int(search.get("budgetPerNight"), 1, MAX_BUDGET, errors, "search.budgetPerNight"),
+            # The budget has its own currency; it follows the response currency until changed.
+            "budgetCurrency": _choice(search.get("budgetCurrency"), CURRENCIES, request["currency"], errors,
+                                      "search.budgetCurrency"),
             "area": _text(search.get("area"), MAX_AREA, errors, "search.area"),
             "freeNights": search.get("freeNights") is True,
             "chains": _text(search.get("chains"), MAX_CHAINS, errors, "search.chains"),
@@ -253,12 +257,12 @@ def room_text(room: dict) -> str:
 
 
 def budget_text(request: dict) -> str:
-    budget = request["search"]["budgetPerNight"]
-    if budget is None:
+    search = request["search"]
+    if search["budgetPerNight"] is None:
         return "—"
-    # A budget in "the hotel's currency" means nothing for a city search, so it is entered in USD.
-    currency = "USD" if request["currency"] == "HOTEL" else request["currency"]
-    return f"до {budget} {currency}/ночь"
+    if search["budgetCurrency"] == "HOTEL":
+        return f"до {search['budgetPerNight']} в валюте отеля за ночь"
+    return f"до {search['budgetPerNight']} {search['budgetCurrency']}/ночь"
 
 
 SEARCH_ROW_DEFAULTS = {"Бюджет": "—", "Район": "—", "Бесплатные ночи": "нет", "Сети": "любые", "Тип отеля": HOTEL_TYPES["any"]}
