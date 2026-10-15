@@ -19,6 +19,13 @@ class Calendar {
     root.addEventListener("input", (event) => {
       if (event.target.dataset.action === "comment") this.state.comment = event.target.value;
     });
+    // While the check-out is picked, a mouse pointer gets a hint with the nights up to the day under it.
+    this.tip = this.el("div", { class: "cal-tip", "aria-hidden": "true" });
+    this.tip.hidden = true;
+    document.body.append(this.tip);
+    root.addEventListener("pointermove", (event) => this.moveTip(event));
+    root.addEventListener("pointerleave", () => this.hideTip());
+    window.addEventListener("scroll", () => this.hideTip(), { passive: true });
   }
 
   static defaultState() {
@@ -149,7 +156,27 @@ class Calendar {
 
   // ---------- rendering ----------
 
+  moveTip(event) {
+    const s = this.state;
+    const day = event.target.closest(".cal-day");
+    if (event.pointerType === "touch" || !s || s.flexible || !s.checkIn || s.checkOut || !day || day.disabled
+        || day.dataset.value <= s.checkIn) {
+      return this.hideTip();
+    }
+    this.tip.textContent = Dates.nightsText(Dates.daysBetween(s.checkIn, day.dataset.value));
+    this.tip.hidden = false;
+    // Centered above the pointer, but never past the screen edges.
+    const half = this.tip.offsetWidth / 2, margin = 8;
+    this.tip.style.left = `${Math.min(window.innerWidth - half - margin, Math.max(half + margin, event.clientX))}px`;
+    this.tip.style.top = `${event.clientY - 14}px`;
+  }
+
+  hideTip() {
+    this.tip.hidden = true;
+  }
+
   render() {
+    this.hideTip();
     const s = this.state;
     const parts = [];
     if (s.flexible) {

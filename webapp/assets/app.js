@@ -152,7 +152,8 @@ function renderReview() {
     const edit = el("button", { type: "button", class: "link-button" }, I18n.t("form.review.edit"));
     edit.addEventListener("click", () => editFromReview(row.key));
     return el("div", { class: "review-item" },
-      el("div", {}, el("div", { class: "review-key" }, row.label), el("div", { class: "review-value" }, row.value)),
+      el("div", {}, ...(row.label ? [el("div", { class: "review-key" }, row.label)] : []),
+        el("div", { class: `review-value${row.label ? "" : " standalone"}${row.isDefault ? " default" : ""}` }, row.value)),
       edit);
   }));
   $("#review-error").hidden = true;

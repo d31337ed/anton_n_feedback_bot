@@ -26,7 +26,6 @@ MAX_BUDGET = 1_000_000
 CONFIG = {"maxNights": MAX_NIGHTS, "horizonMonths": HORIZON_MONTHS, "flexMonths": FLEX_MONTHS,
           "flexNights": list(FLEX_NIGHTS), "maxDatesComment": MAX_DATES_COMMENT, "adults": list(ADULTS), "maxChildren": MAX_CHILDREN, "maxChildAge": MAX_CHILD_AGE}
 
-DEFAULT_ROOM = {"category": "best_rate", "customText": None, "bed": "any"}
 # budget None means the choice is left to the agent.
 DEFAULT_SEARCH = {"budget": None, "budgetCurrency": "USD", "budgetUnit": "night", "area": None, "freeNights": False, "chains": None,
                   "hotelType": "any"}
@@ -294,7 +293,7 @@ def budget_text(request: dict, lang: str = DEFAULT_LANG) -> str:
     return t("request.budget.amount", lang, amount=budget, currency=search["budgetCurrency"], unit=unit)
 
 
-# Text of each search criterion's default value; the chat lists only criteria that differ from it.
+# Text of each search criterion's default value, for criteria missing from one of two diffed versions.
 SEARCH_DEFAULTS = {"budget": "request.budget.none", "area": "request.values.empty", "free_nights": "request.values.no",
                    "chains": "request.values.any_chains", "hotel_type": "request.hotel_types.any"}
 
@@ -323,18 +322,26 @@ def comments_text(request: dict, lang: str = DEFAULT_LANG) -> str | None:
 
 
 def rows(request: dict, full: bool = False, lang: str = DEFAULT_LANG) -> list[tuple[str, str]]:
-    """(label, plain value) pairs. full=True also lists default values and each comment separately - used to diff two versions."""
+    """(label, plain value) pairs; a row with an empty label is a line on its own.
+    Defaults are listed too, except an empty area and free nights that are off.
+    full=True lists everything, free nights as yes/no and each comment separately - used to diff two versions."""
     label = lambda key: t(f"request.labels.{key}", lang)
     place = ("hotel", request["hotel"]) if request["mode"] == MODE_HOTEL else ("city", request["city"])
     result = [(label(place[0]), place[1]),
               (label("dates"), request["dates"]["label"]),
               (label("guests"), guests_text(request["adults"], request["childrenAges"], lang))]
-    if full or request["room"] != DEFAULT_ROOM:
-        result.append((label("room"), room_text(request["room"], lang)))
+    result.append((label("room"), room_text(request["room"], lang)))
     result.append((label("currency"), t(f"request.currencies.{request['currency']}", lang)))
     if request["search"] is not None:
-        result.extend((label(key), value) for key, value in search_rows(request, lang)
-                      if full or value != t(SEARCH_DEFAULTS[key], lang))
+        search = request["search"]
+        for key, value in search_rows(request, lang):
+            if full:
+                result.append((label(key), value))
+            elif key == "free_nights":
+                if search["freeNights"]:
+                    result.append(("", t("request.values.free_nights_only", lang)))
+            elif key != "area" or search["area"]:
+                result.append((label(key), value))
     if full:
         result.extend((f"{label('comments')} · {t(f'request.comments.{key}', lang)}", get(request) or t("request.values.empty", lang))
                       for key, get in COMMENT_PARTS)
@@ -347,6 +354,9 @@ def format_request(request: dict, lang: str = DEFAULT_LANG) -> str:
     lines = []
     for label, value in rows(request, lang=lang):
         # The comments are a list of bullets, so they start on a new line.
+        if not label:
+            lines.append(html.escape(value))
+            continue
         separator = "\n" if label == t("request.labels.comments", lang) else " "
         lines.append(f"<b>{label}</b>:{separator}{html.escape(value)}")
     return "\n".join(lines)

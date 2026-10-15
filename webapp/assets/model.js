@@ -206,7 +206,8 @@ const HotelModel = (() => {
       .map(([key, get]) => `• ${I18n.t(`request.comments.${key}`)}: ${get(data)}`).join("\n") || null;
   }
 
-  // Review screen rows (FR-4.1) - the same as the summary the bot sends to the chat.
+  // Review screen rows (FR-4.1) - the same as the summary the bot sends to the chat (hotel_form.rows).
+  // Defaults are listed too (isDefault), except an empty area and free nights that are off; an empty label is a line on its own.
   function reviewRows(data) {
     const label = (key) => I18n.t(`request.labels.${key}`);
     const rows = [
@@ -215,19 +216,22 @@ const HotelModel = (() => {
       { key: "guests", label: label("guests"), value: guestsText(data.adults, data.childrenAges) },
     ];
     const room = data.room;
-    if (room.category !== "best_rate" || room.bed !== "any") {
-      // The custom text itself is listed with the comments.
-      rows.push({ key: "room", label: label("room"), value: `${I18n.t(`request.room_categories.${room.category}`)} · ${I18n.t(`request.beds.${room.bed}`)}` });
-    }
+    // The custom text itself is listed with the comments.
+    rows.push({
+      key: "room", label: label("room"), value: `${I18n.t(`request.room_categories.${room.category}`)} · ${I18n.t(`request.beds.${room.bed}`)}`,
+      isDefault: room.category === "best_rate" && room.bed === "any",
+    });
     rows.push({ key: "currency", label: label("currency"), value: I18n.t(`request.currencies.${data.currency}`) });
     const search = data.search;
     if (search) {
       const budget = budgetText(search, search.budgetCurrency);
-      if (budget) rows.push({ key: "budget", label: label("budget"), value: budget });
+      rows.push({ key: "budget", label: label("budget"), value: budget || I18n.t("request.budget.none"), isDefault: !budget });
       if (search.area) rows.push({ key: "search", label: label("area"), value: search.area });
-      if (search.freeNights) rows.push({ key: "search", label: label("free_nights"), value: I18n.t("request.values.yes") });
-      if (search.chains) rows.push({ key: "search", label: label("chains"), value: search.chains });
-      if (search.hotelType !== "any") rows.push({ key: "search", label: label("hotel_type"), value: I18n.t(`request.hotel_types.${search.hotelType}`) });
+      if (search.freeNights) rows.push({ key: "search", label: "", value: I18n.t("request.values.free_nights_only") });
+      rows.push({ key: "search", label: label("chains"), value: search.chains || I18n.t("request.values.any_chains"), isDefault: !search.chains });
+      rows.push({
+        key: "search", label: label("hotel_type"), value: I18n.t(`request.hotel_types.${search.hotelType}`), isDefault: search.hotelType === "any",
+      });
     }
     const comments = commentsText(data);
     if (comments) rows.push({ key: data.comment ? "comment" : data.room.customText ? "room" : "dates", label: label("comments"), value: comments });

@@ -9,6 +9,8 @@ class Accordion {
     root.addEventListener("click", (event) => {
       const toggle = event.target.closest("[data-accordion-toggle]");
       if (!toggle || !root.contains(toggle)) return;
+      // A control inside the row, like an (i) button, does its own thing.
+      if (event.target.closest("button, [role=button]") !== toggle) return;
       const name = toggle.closest("[data-accordion]").dataset.accordion;
       this.toggle(name);
     });
