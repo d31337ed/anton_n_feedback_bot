@@ -1,0 +1,53 @@
+# Тексты для админского чата. Не переводятся: всегда на русском.
+
+# Служебные уведомления
+[alert]
+unauthorized = """
+🚫Попытка доступа от неавторизованного пользователя
+ID: {user_id}
+Имя: {user_name}
+Username: @{username}
+"""
+
+# Названия топиков. {user_name}, {user_id} — имя и ID пользователя
+[topic]
+adv = "📢Предложение рекламной интеграции от {user_name} [id={user_id}]"
+special = "⭐️Предложение спецпроекта от {user_name} [id={user_id}]"
+public_question = "🙋Публичный вопрос от {user_name} [id={user_id}]"
+hotel = "🛎️Запрос бронирования отеля от {user_name} [id={user_id}]"
+avolta = "😎Запрос статуса Avolta от {user_name} [id={user_id}]"
+msc = "🚢Запрос статуса MSC от {user_name} [id={user_id}]"
+report_bot = "🤖Проблема с ботом от {user_name} [id={user_id}]"
+report_routes = "✈️Проблема с routes.de1337ed.ru от {user_name} [id={user_id}]"
+report_typo = "✍️Опечатка/неточность от {user_name} [id={user_id}]"
+other = "🌀Иное от {user_name} [id={user_id}]"
+
+# Карточка пользователя — первое сообщение в топике
+[card]
+text = """
+👤<b>{full_name}</b>
+Ник: {username}
+Профиль: {profile_link}
+ID: <code>{user_id}</code>
+"""
+no_username = "нет"
+profile_link = "открыть"
+
+# Заявка из формы в топике. {fields} — поля заявки, {changes} — что изменилось
+[hotel_form]
+new = """
+📝<b>Заявка из формы</b>
+
+{fields}
+"""
+filled = """
+📝<b>Пользователь заполнил форму к этой заявке</b>
+
+{fields}
+"""
+edited = """
+✏️<b>Заявка изменена</b>
+
+{changes}
+"""
+unchanged = "✏️<b>Форма отправлена повторно без изменений</b>"

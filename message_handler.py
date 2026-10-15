@@ -6,6 +6,8 @@ from aiogram.types import Message
 from button_handlers import handlers
 from keyboards import *
 from settings import settings
+from texts import t, text_key
+from hotel_requests import mark_answered
 from topic_registry import get_topic_user_id, release_topic_user
 
 message_router = Router()
@@ -37,15 +39,16 @@ async def input_handler(message: Message, state: FSMContext, bot: Bot, album: li
                                         message_ids=[m.message_id for m in album])
             else:
                 await bot.copy_message(chat_id=reply_to_chat_id, from_chat_id=settings.chat_id, message_id=message.message_id)
+            await mark_answered(bot, message.message_thread_id)
             return
-        handler = handlers.get(message.text)
+        handler = handlers.get(text_key(message.text, "buttons."))
         if handler:
             logging.info(f"Button '{message.text}' pressed by user {message.from_user.id} in state {await state.get_state()}")
             await handler(message, state)
         elif message.from_user.id != settings.bot_id:
-            await message.answer(text=NO_INPUT, parse_mode="html")
+            await message.answer(text=t("common.no_input"), parse_mode="html")
     except Exception as e:
         error_text = f'Returned feedback error to user with ID={message.from_user.id}. Error: {e}'
         logging.error(error_text)
         await bot.send_message(text=error_text, chat_id=settings.chat_id, message_thread_id=settings.error_topic_id)
-        await message.answer(text=ERROR_TEXT, parse_mode='html')
+        await message.answer(text=t("common.error"), parse_mode='html')

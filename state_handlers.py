@@ -5,17 +5,17 @@ from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
-from button_handlers import handlers as button_handlers
 from states import *
 from keyboards import *
 from settings import settings
+from texts import t, admin_t, texts_under
 from topic_registry import create_topic
 
 state_router = Router()
 # Customer flows only happen in private chats - keeps stray FSM state from
 # ever matching replies sent inside the support group's forum topics.
 # Button texts always navigate and are never forwarded as part of an inquiry.
-state_router.message.filter(F.chat.type == ChatType.PRIVATE, ~F.text.in_(button_handlers.keys()))
+state_router.message.filter(F.chat.type == ChatType.PRIVATE, ~F.text.in_(texts_under("buttons.")))
 
 
 async def forward_to_topic(bot: Bot, message: Message, album: list[Message] | None, topic_id: int) -> None:
@@ -59,54 +59,54 @@ async def forward_to_user_topic(message: Message, state: FSMContext, bot: Bot, t
 @state_router.message(AdvFlow.adv_in_offer_state)
 async def process_public_question(message: Message, state: FSMContext, bot: Bot, album: list[Message] | None = None) -> None:
     logging.info(f"Received message from user {message.from_user.id}, Name: {message.from_user.full_name}, AdvFlow.adv_in_offer_state")
-    await forward_to_user_topic(message, state, bot, IN_ADV_TOPIC, ADV_OFFER_RECEIVED_TEXT, album=album)
+    await forward_to_user_topic(message, state, bot, admin_t("topic.adv"), t("adv.received"), album=album)
 
 @state_router.message(AdvFlow.adv_in_special_offer_state)
 async def process_public_question(message: Message, state: FSMContext, bot: Bot, album: list[Message] | None = None) -> None:
     logging.info(f"Received message from user {message.from_user.id}, Name: {message.from_user.full_name}, AdvFlow.adv_in_special_offer_state")
-    await forward_to_user_topic(message, state, bot, IN_SPECIAL_TOPIC, ADV_OFFER_RECEIVED_TEXT, album=album)
+    await forward_to_user_topic(message, state, bot, admin_t("topic.special"), t("adv.received"), album=album)
 
 @state_router.message(ServicesFlow.services_book_hotel_state)
 async def process_hotel_request(message: Message, state: FSMContext, bot: Bot, album: list[Message] | None = None) -> None:
     logging.info(f"Received message from user {message.from_user.id}, Name: {message.from_user.full_name}, ServicesFlow.services_book_hotel_state")
-    await forward_to_user_topic(message, state, bot, HOTEL_REQUEST_TOPIC, HOTEL_REQUEST_RECEIVED_TEXT, album=album)
+    await forward_to_user_topic(message, state, bot, admin_t("topic.hotel"), t("hotel.received"), album=album)
 
 @state_router.message(QuestionFlow.public_question)
 async def process_public_question(message: Message, state: FSMContext, bot: Bot, album: list[Message] | None = None) -> None:
     user_id = str(message.from_user.id)
     user_name = message.from_user.full_name
     topic_id = await create_topic(bot, user=message.from_user,
-                                  name=PUBLIC_QUESTION_TOPIC.format(user_name=user_name, user_id=user_id))
+                                  name=admin_t("topic.public_question").format(user_name=user_name, user_id=user_id))
     logging.info(f"Created public question forum topic for user {user_id} with topic ID: {topic_id}")
     await forward_to_topic(bot, message, album, topic_id)
-    await message.reply(text=INQUIRY_SENT_TEXT, reply_markup=MainMenuKeyboard, parse_mode="html")
+    await message.reply(text=t("question.sent"), reply_markup=MainMenuKeyboard, parse_mode="html")
     await state.clear()
 
 @state_router.message(WelcomeFlow.other_inquiries_state)
 async def process_public_question(message: Message, state: FSMContext, bot: Bot, album: list[Message] | None = None) -> None:
     logging.info(f"Received message from user {message.from_user.id}, Name: {message.from_user.full_name}, WelcomeFlow.other_inquiries_state")
-    await forward_to_user_topic(message, state, bot, OTHERS_TOPIC, INQUIRY_SENT_TEXT, album=album, reply_markup=MainMenuKeyboard)
+    await forward_to_user_topic(message, state, bot, admin_t("topic.other"), t("question.sent"), album=album, reply_markup=MainMenuKeyboard)
     await state.clear()
 
 @state_router.message(ServicesFlow.services_order_status_avolta_radisson)
 async def process_avolta_request(message: Message, state: FSMContext, bot: Bot, album: list[Message] | None = None) -> None:
     logging.info(f"Received message from user {message.from_user.id}, Name: {message.from_user.full_name}, ServiceFlow.services_order_status_avolta_radisson")
-    await forward_to_user_topic(message, state, bot, AVOLTA_TOPIC, ORDER_STATUS_RECEIVED_TEXT, album=album)
+    await forward_to_user_topic(message, state, bot, admin_t("topic.avolta"), t("status.received"), album=album)
 
 @state_router.message(ServicesFlow.services_order_status_msc_diamond)
 async def process_msc_request(message: Message, state: FSMContext, bot: Bot, album: list[Message] | None = None) -> None:
     logging.info(f"Received message from user {message.from_user.id}, Name: {message.from_user.full_name}, ServicesFlow.services_order_status_msc_diamond")
-    await forward_to_user_topic(message, state, bot, MSC_TOPIC, ORDER_STATUS_RECEIVED_TEXT, album=album)
+    await forward_to_user_topic(message, state, bot, admin_t("topic.msc"), t("status.received"), album=album)
 
 @state_router.message(ReportIssueFlow.report_bot_problem)
 async def process_public_question(message: Message, state: FSMContext, bot: Bot, album: list[Message] | None = None) -> None:
     user_id = str(message.from_user.id)
     user_name = message.from_user.full_name
     topic_id = await create_topic(bot, user=message.from_user,
-                                  name=ISSUE_BOT_TOPIC.format(user_name=user_name, user_id=user_id))
+                                  name=admin_t("topic.report_bot").format(user_name=user_name, user_id=user_id))
     logging.info(f"Created bot issue forum topic for user {user_id} with topic ID: {topic_id}")
     await forward_to_topic(bot, message, album, topic_id)
-    await message.reply(text=PROBLEM_RECEIVED_TEXT, reply_markup=MainMenuKeyboard, parse_mode="html")
+    await message.reply(text=t("report.received"), reply_markup=MainMenuKeyboard, parse_mode="html")
     await state.clear()
 
 @state_router.message(ReportIssueFlow.report_routes_problem)
@@ -114,10 +114,10 @@ async def process_public_question(message: Message, state: FSMContext, bot: Bot,
     user_id = str(message.from_user.id)
     user_name = message.from_user.full_name
     topic_id = await create_topic(bot, user=message.from_user,
-                                  name=ISSUE_ROUTES_TOPIC.format(user_name=user_name, user_id=user_id))
+                                  name=admin_t("topic.report_routes").format(user_name=user_name, user_id=user_id))
     logging.info(f"Created routes issue forum topic for user {user_id} with topic ID: {topic_id}")
     await forward_to_topic(bot, message, album, topic_id)
-    await message.reply(text=PROBLEM_RECEIVED_TEXT, reply_markup=MainMenuKeyboard, parse_mode="html")
+    await message.reply(text=t("report.received"), reply_markup=MainMenuKeyboard, parse_mode="html")
     await state.clear()
 
 @state_router.message(ReportIssueFlow.report_typo_problem)
@@ -125,8 +125,8 @@ async def process_public_question(message: Message, state: FSMContext, bot: Bot,
     user_id = str(message.from_user.id)
     user_name = message.from_user.full_name
     topic_id = await create_topic(bot, user=message.from_user,
-                                  name=ISSUE_TYPO_TOPIC.format(user_name=user_name, user_id=user_id))
+                                  name=admin_t("topic.report_typo").format(user_name=user_name, user_id=user_id))
     logging.info(f"Created typo issue forum topic for user {user_id} with topic ID: {topic_id}")
     await forward_to_topic(bot, message, album, topic_id)
-    await message.reply(text=PROBLEM_RECEIVED_TEXT, reply_markup=MainMenuKeyboard, parse_mode="html")
+    await message.reply(text=t("report.received"), reply_markup=MainMenuKeyboard, parse_mode="html")
     await state.clear()
